@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { SettingsForm } from "./components/settings-form";
 import { auth } from "@/lib/auth";
 
+export const runtime = 'nodejs';
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const SettingsPage = async ({ params }: any) => {
     const resolvedParams = await params;

@@ -2,6 +2,8 @@ import prismadb from "@/lib/prismadb";
 import { CategoryForm } from "./components/category-form";
 import { ObjectId } from "mongodb";
 
+export const runtime = 'nodejs';
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const CategoryPage = async ({ params }: any) => {
   const resolvedParams = await params;

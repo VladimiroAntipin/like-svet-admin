@@ -28,7 +28,10 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
     const onDelete = async () => {
         try {
             setLoading(true);
-            await axios.delete(`/api/${params.storeId}/products/${data.id}`);
+            await axios.delete(
+                `/api/${params.storeId}/products/${data.id}`,
+                { withCredentials: true }
+            );
             router.refresh();
             toast.success('Товар удален');
             // eslint-disable-next-line @typescript-eslint/no-unused-vars

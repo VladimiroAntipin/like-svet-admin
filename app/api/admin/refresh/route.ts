@@ -3,56 +3,54 @@ import { verifyToken, generateAccessToken, generateRefreshToken } from '@/lib/se
 import { authConfig } from '@/lib/server/auth/config';
 import prismadb from '@/lib/prismadb';
 
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   try {
-    // MODIFICA: Leggi il refresh token direttamente dai cookie della request
     const refreshToken = request.cookies.get(authConfig.refreshTokenCookieName)?.value;
-    
+
     if (!refreshToken) {
       return NextResponse.json(
         { success: false, error: 'Token refresh not provided' },
         { status: 401 }
       );
     }
-    
-    const payload = verifyToken(refreshToken);
-    
+
+    const payload = await verifyToken(refreshToken);
+
     if (!payload) {
       return NextResponse.json(
         { success: false, error: 'Token refresh not valid' },
         { status: 401 }
       );
     }
-    
-    // Verifica che l'utente esista e che la versione del token corrisponda
+
     const user = await prismadb.admin.findUnique({
       where: { id: payload.userId },
     });
-    
+
     if (!user || user.tokenVersion !== payload.tokenVersion) {
       return NextResponse.json(
         { success: false, error: 'Token revoked' },
         { status: 401 }
       );
     }
-    
-    // Genera nuovi token
-    const newAccessToken = generateAccessToken({
+
+    const newAccessToken = await generateAccessToken({
       userId: user.id,
       tokenVersion: user.tokenVersion,
     });
-    
-    const newRefreshToken = generateRefreshToken({
+
+    const newRefreshToken = await generateRefreshToken({
       userId: user.id,
       tokenVersion: user.tokenVersion,
     });
-    
-    // Prepara la response
+
     const response = NextResponse.json({
       success: true,
       userId: user.id,
     });
-    
+
     const isProd = process.env.NODE_ENV === 'production';
 
     response.cookies.set(authConfig.accessTokenCookieName, newAccessToken, {
@@ -72,10 +70,10 @@ export async function POST(request: NextRequest) {
       path: '/',
       domain: authConfig.cookieDomain,
     });
-    
+
     return response;
-  } catch (error) {
-    console.error('Error during token refresh:', error);
+
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Internal error' },
       { status: 500 }

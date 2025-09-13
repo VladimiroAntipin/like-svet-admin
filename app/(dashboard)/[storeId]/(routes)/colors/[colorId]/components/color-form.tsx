@@ -55,9 +55,17 @@ export const ColorForm: React.FC<ColorFormProps> = ({ initialData }) => {
         try {
             setLoading(true);
             if (initialData) {
-                await axios.patch(`/api/${params.storeId}/colors/${params.colorId}`, data);
+                await axios.patch(
+                    `/api/${params.storeId}/colors/${params.colorId}`,
+                    data,
+                    { withCredentials: true }
+                );
             } else {
-                await axios.post(`/api/${params.storeId}/colors`, data);
+                await axios.post(
+                    `/api/${params.storeId}/colors`,
+                    data,
+                    { withCredentials: true }
+                );
             }
             router.refresh();
             router.push(`/${params.storeId}/colors`)
@@ -73,7 +81,10 @@ export const ColorForm: React.FC<ColorFormProps> = ({ initialData }) => {
     const onDelete = async () => {
         try {
             setLoading(true);
-            await axios.delete(`/api/${params.storeId}/colors/${params.colorId}`);
+            await axios.delete(
+                `/api/${params.storeId}/colors/${params.colorId}`,
+                { withCredentials: true }
+            );
             router.refresh();
             router.push(`/${params.storeId}/colors`);
             toast.success('цвет удален');

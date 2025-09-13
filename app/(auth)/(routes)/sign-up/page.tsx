@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 
+export const dynamic = 'force-dynamic';
+
 const validateEmail = (value: string) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
@@ -57,37 +59,27 @@ export default function SignUpPage() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/admin/register', { 
+      const res = await fetch('/api/admin/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, confirmPassword }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
 
-      if (!res.ok) {
-        setServerErrors(data.errors || {
-          email: data.error || 'Ошибка сервера',
-          password: data.error || 'Ошибка сервера',
-          confirmPassword: data.error || 'Ошибка сервера'
+      if (!res.ok || !data?.success) {
+        setServerErrors(data?.errors || {
+          email: data?.error || 'Ошибка сервера',
+          password: data?.error || 'Ошибка сервера',
+          confirmPassword: data?.error || 'Ошибка сервера'
         });
         setLoading(false);
         return;
       }
 
-      // Dopo la registrazione, fai il login automatico
-      const loginResult = await signIn(email, password);
-      
-      if (loginResult.success) {
-        router.push('/');
-      } else {
-        setServerErrors({ 
-          email: loginResult.error || 'Ошибка авторизации',
-          password: loginResult.error || 'Ошибка авторизации'
-        });
-      }
-    } catch (err) {
-      console.error(err);
+      await signIn(email, password);
+
+    } catch {
       setServerErrors({
         email: 'Ошибка сервера',
         password: 'Ошибка сервера',

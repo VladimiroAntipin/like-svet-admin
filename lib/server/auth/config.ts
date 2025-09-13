@@ -1,11 +1,11 @@
 export const authConfig = {
   accessTokenCookieName: 'admin_access_token',
   refreshTokenCookieName: 'admin_refresh_token',
-  accessTokenExpiry: 60 * 60 * 1000, // 1 hour
-  refreshTokenExpiry: 30 * 24 * 60 * 60 * 1000, // 30 days
+  accessTokenExpiry: 60 * 60 * 1000,
+  refreshTokenExpiry: 30 * 24 * 60 * 60 * 1000,
   
   get cookieDomain() {
-    return process.env.NODE_ENV === 'production' ? '.likesvet.com' : undefined;
+    return process.env.NODE_ENV === 'production' ? 'admin.likesvet.com' : undefined;
   },
   
   jwtSecret: (() => {
@@ -17,7 +17,6 @@ export const authConfig = {
       if (process.env.NODE_ENV === 'production') {
         throw new Error('❌ JWT_SECRET_PROD environment variable is required in production');
       }
-      console.warn('⚠️  JWT_SECRET not set. Using development secret.');
       return 'dev-secret-only-for-development-change-in-production';
     }
     return secret;

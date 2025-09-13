@@ -50,12 +50,20 @@ export const SizeForm: React.FC<SizeFormProps> = ({ initialData }) => {
         try {
             setLoading(true);
             if (initialData) {
-                await axios.patch(`/api/${params.storeId}/sizes/${params.sizeId}`, data);
+                await axios.patch(
+                    `/api/${params.storeId}/sizes/${params.sizeId}`,
+                    data,
+                    { withCredentials: true }
+                );
             } else {
-                await axios.post(`/api/${params.storeId}/sizes`, data);
+                await axios.post(
+                    `/api/${params.storeId}/sizes`,
+                    data,
+                    { withCredentials: true }
+                );
             }
             router.refresh();
-            router.push(`/${params.storeId}/sizes`)
+            router.push(`/${params.storeId}/sizes`);
             toast.success(toastMessage);
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
@@ -68,7 +76,10 @@ export const SizeForm: React.FC<SizeFormProps> = ({ initialData }) => {
     const onDelete = async () => {
         try {
             setLoading(true);
-            await axios.delete(`/api/${params.storeId}/sizes/${params.sizeId}`);
+            await axios.delete(
+                `/api/${params.storeId}/sizes/${params.sizeId}`,
+                { withCredentials: true }
+            );
             router.refresh();
             router.push(`/${params.storeId}/sizes`);
             toast.success('Размер удален');

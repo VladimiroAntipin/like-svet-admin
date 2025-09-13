@@ -28,7 +28,10 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
     const onDelete = async () => {
         try {
             setLoading(true);
-            await axios.delete(`/api/${params.storeId}/colors/${data.id}`);
+            await axios.delete(
+                `/api/${params.storeId}/colors/${data.id}`,
+                { withCredentials: true }
+            );
             router.refresh();
             toast.success('цвет удален');
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -44,9 +47,9 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
         <>
             <AlertModal isOpen={open} onClose={() => setOpen(false)} onConfirm={onDelete} loading={loading} />
             <DropdownMenu>
-                <DropdownMenuTrigger asChild >
+                <DropdownMenuTrigger asChild>
                     <Button variant='ghost' className="w-8 h-8 p-0 cursor-pointer">
-                        <span className='sr-only' >Меню</span>
+                        <span className='sr-only'>Меню</span>
                         <MoreHorizontal className="w-4 h-4" />
                     </Button>
                 </DropdownMenuTrigger>

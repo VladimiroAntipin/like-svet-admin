@@ -2,7 +2,7 @@ import { NextResponse, NextRequest } from 'next/server';
 import { authConfig } from '@/lib/server/auth/config';
 
 const PUBLIC_ROUTES = [
-  /^\/api\/.*/,          // tutte le API sono pubbliche
+  /^\/api\/.*/,
   /^\/sign-in(\?.*)?$/,
   /^\/sign-up(\?.*)?$/,
 ];
@@ -10,6 +10,7 @@ const PUBLIC_ROUTES = [
 const ALLOWED_ORIGINS = [
   'http://localhost:3000',
   'http://localhost:3001',
+  'http://109.205.58.129:3000',
   'https://like-svet-site.vercel.app',
   'http://like-svet-site.vercel.app',
   'https://likesvet.com',
@@ -20,26 +21,50 @@ const ALLOWED_ORIGINS = [
   'http://admin.likesvet.com'
 ];
 
-export async function middleware(req: NextRequest) {
+export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const origin = req.headers.get('origin') || '';
 
-  // --- bypass route pubbliche ---
   if (PUBLIC_ROUTES.some((pattern) => pattern.test(pathname))) {
     return NextResponse.next();
   }
 
-  // --- controllo token ---
+  if (req.method === 'POST' && ['/api/admin/login', '/api/admin/register'].includes(pathname)) {
+    return NextResponse.next();
+  }
+
+  if (req.method === 'OPTIONS') {
+    const preflight = new NextResponse(null, { status: 204 });
+
+    if (origin && ALLOWED_ORIGINS.includes(origin)) {
+      preflight.headers.set('Access-Control-Allow-Origin', origin);
+      preflight.headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
+      preflight.headers.set(
+        'Access-Control-Allow-Headers',
+        'Content-Type, Authorization, X-Requested-With, Accept'
+      );
+      preflight.headers.set('Access-Control-Allow-Credentials', 'true');
+      preflight.headers.set('Vary', 'Origin');
+    }
+
+    preflight.headers.set('Cache-Control', 'no-store');
+    return preflight;
+  }
+
   const accessToken = req.cookies.get(authConfig.accessTokenCookieName)?.value;
 
   if (!accessToken) {
     const loginUrl = new URL('/sign-in', req.url);
     loginUrl.searchParams.set('redirect', pathname + req.nextUrl.search);
-    return NextResponse.redirect(loginUrl);
+
+    const redirectRes = NextResponse.redirect(loginUrl);
+    redirectRes.headers.set('Cache-Control', 'no-store');
+    return redirectRes;
   }
 
-  // --- CORS headers solo se origin valido ---
   const res = NextResponse.next();
+
+  // CORS headers (solo se origin valido)
   if (origin && ALLOWED_ORIGINS.includes(origin)) {
     res.headers.set('Access-Control-Allow-Origin', origin);
     res.headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
@@ -51,26 +76,12 @@ export async function middleware(req: NextRequest) {
     res.headers.set('Vary', 'Origin');
   }
 
-  // --- preflight OPTIONS ---
-  if (req.method === 'OPTIONS') {
-    const preflight = new NextResponse(null, { status: 204 });
-    if (origin && ALLOWED_ORIGINS.includes(origin)) {
-      preflight.headers.set('Access-Control-Allow-Origin', origin);
-      preflight.headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
-      preflight.headers.set(
-        'Access-Control-Allow-Headers',
-        'Content-Type, Authorization, X-Requested-With, Accept'
-      );
-      preflight.headers.set('Access-Control-Allow-Credentials', 'true');
-      preflight.headers.set('Vary', 'Origin');
-    }
-    return preflight;
-  }
+  // Blocca cache per route private
+  res.headers.set('Cache-Control', 'no-store');
 
   return res;
 }
 
-// --- matcher: tutto tranne _next e file statici ---
 export const config = {
   matcher: [
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',

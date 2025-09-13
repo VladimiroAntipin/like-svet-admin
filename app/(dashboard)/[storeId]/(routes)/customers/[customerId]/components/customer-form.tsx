@@ -34,7 +34,7 @@ export const formSchema = z.object({
   birthDate: z.string().optional(),
   email: z.string().email("Невалидный email"),
   phone: z.string().min(5, "Телефон обязателен"),
-  password: z.string().optional(), // Password opzionale
+  password: z.string().optional(),
   balance: balanceSchema,
 });
 
@@ -51,8 +51,8 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData }) => {
   const params = useParams();
   const router = useRouter();
   const [balanceRub, setBalanceRub] = useState<number>(
-  initialData ? (initialData.balance ?? 0) / 100 : 0
-);
+    initialData ? (initialData.balance ?? 0) / 100 : 0
+  );
 
   const title = initialData ? "Редактировать клиента" : "Создать клиента";
   const description = initialData
@@ -65,27 +65,27 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData }) => {
     resolver: zodResolver(formSchema),
     defaultValues: initialData
       ? {
-          firstName: initialData.firstName || "",
-          lastName: initialData.lastName || "",
-          profileImage: initialData.profileImage || "",
-          birthDate: initialData.birthDate
-            ? new Date(initialData.birthDate).toISOString().split("T")[0]
-            : "",
-          email: initialData.email || "",
-          phone: initialData.phone || "",
-          password: "", // lascia vuoto la password, l’utente può impostarne una nuova
-          balance: initialData.balance ? initialData.balance / 100 : 0,
-        }
+        firstName: initialData.firstName || "",
+        lastName: initialData.lastName || "",
+        profileImage: initialData.profileImage || "",
+        birthDate: initialData.birthDate
+          ? new Date(initialData.birthDate).toISOString().split("T")[0]
+          : "",
+        email: initialData.email || "",
+        phone: initialData.phone || "",
+        password: "",
+        balance: initialData.balance ? initialData.balance / 100 : 0,
+      }
       : {
-          firstName: "",
-          lastName: "",
-          profileImage: "",
-          birthDate: "",
-          email: "",
-          phone: "",
-          password: "",
-          balance: 0,
-        },
+        firstName: "",
+        lastName: "",
+        profileImage: "",
+        birthDate: "",
+        email: "",
+        phone: "",
+        password: "",
+        balance: 0,
+      },
   });
 
   const onSubmit = async (data: CustomerFormValues) => {
@@ -100,10 +100,15 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData }) => {
       if (initialData) {
         await axios.patch(
           `/api/${params.storeId}/customers/${params.customerId}`,
-          payload
+          payload,
+          { withCredentials: true }
         );
       } else {
-        await axios.post(`/api/${params.storeId}/customers`, payload);
+        await axios.post(
+          `/api/${params.storeId}/customers`,
+          payload,
+          { withCredentials: true }
+        );
       }
 
       router.refresh();
@@ -121,7 +126,8 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData }) => {
     try {
       setLoading(true);
       await axios.delete(
-        `/api/${params.storeId}/customers/${params.customerId}`
+        `/api/${params.storeId}/customers/${params.customerId}`,
+        { withCredentials: true }
       );
       router.refresh();
       router.push(`/${params.storeId}/customers`);

@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+export const runtime = 'nodejs';
+
 // Durate dei token
 const ACCESS_TOKEN_EXPIRES_IN = "1d"; 
 const REFRESH_TOKEN_EXPIRES_IN = "30d";

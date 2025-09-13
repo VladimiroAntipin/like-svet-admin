@@ -35,7 +35,7 @@ export const BillboardForm: React.FC<BillboardFormProps> = ({ initialData }) => 
     const router = useRouter();
 
     const title = initialData ? 'Редактировать баннер' : 'Создать баннер';
-    const description = initialData ? 'Управление баннерами для вашего магазина' : 'Создание нового баннер';
+    const description = initialData ? 'Управление баннерами для вашего магазина' : 'Создание нового баннера';
     const toastMessage = initialData ? 'Баннер обновлен' : 'Баннер создан';
     const action = initialData ? 'Сохранить' : 'Создать';
 
@@ -51,16 +51,24 @@ export const BillboardForm: React.FC<BillboardFormProps> = ({ initialData }) => 
         try {
             setLoading(true);
             if (initialData) {
-                await axios.patch(`/api/${params.storeId}/billboards/${params.billboardId}`, data);
+                await axios.patch(
+                    `/api/stores/${params.storeId}/billboards/${params.billboardId}`,
+                    data,
+                    { withCredentials: true }
+                );
             } else {
-                await axios.post(`/api/${params.storeId}/billboards`, data);
+                await axios.post(
+                    `/api/stores/${params.storeId}/billboards`,
+                    data,
+                    { withCredentials: true }
+                );
             }
             router.refresh();
-            router.push(`/${params.storeId}/billboards`)
+            router.push(`/${params.storeId}/billboards`);
             toast.success(toastMessage);
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
-            toast.error('Не удалось обновить магазин');
+            console.error("[BILLBOARD_FORM]", error);
+            toast.error('Не удалось сохранить баннер');
         } finally {
             setLoading(false);
         }
@@ -69,13 +77,16 @@ export const BillboardForm: React.FC<BillboardFormProps> = ({ initialData }) => 
     const onDelete = async () => {
         try {
             setLoading(true);
-            await axios.delete(`/api/${params.storeId}/billboards/${params.billboardId}`);
+            await axios.delete(
+                `/api/stores/${params.storeId}/billboards/${params.billboardId}`,
+                { withCredentials: true }
+            );
             router.refresh();
             router.push(`/${params.storeId}/billboards`);
             toast.success('Баннер удален');
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
-            toast.error('Необхлдимо удалить все товары и категории магазина перед удалением');
+            console.error("[BILLBOARD_FORM_DELETE]", error);
+            toast.error('Не удалось удалить баннер. Убедитесь, что нет связанных данных.');
         } finally {
             setLoading(false);
             setOpen(false);
@@ -85,7 +96,7 @@ export const BillboardForm: React.FC<BillboardFormProps> = ({ initialData }) => 
     return (
         <>
             <AlertModal isOpen={open} onClose={() => setOpen(false)} onConfirm={onDelete} loading={loading} />
-            <div className="flex item-center justify-between">
+            <div className="flex items-center justify-between">
                 <Heading title={title} description={description} />
                 {initialData && (
                     <Button disabled={loading} variant='destructive' size='sm' className="cursor-pointer" onClick={() => setOpen(true)}>
@@ -99,8 +110,13 @@ export const BillboardForm: React.FC<BillboardFormProps> = ({ initialData }) => 
                     <FormField control={form.control} name="imageUrl" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Изображение</FormLabel>
-                            <FormControl >
-                                <ImageUpload value={field.value ? [field.value] : []} disabled={loading} onChange={(url) => field.onChange(url)} onRemove={() => field.onChange('')} />
+                            <FormControl>
+                                <ImageUpload
+                                    value={field.value ? [field.value] : []}
+                                    disabled={loading}
+                                    onChange={(url) => field.onChange(url)}
+                                    onRemove={() => field.onChange('')}
+                                />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -109,8 +125,8 @@ export const BillboardForm: React.FC<BillboardFormProps> = ({ initialData }) => 
                         <FormField control={form.control} name="label" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Текст</FormLabel>
-                                <FormControl >
-                                    <Input disabled={loading} placeholder="Текст для вашего ваннера" {...field} />
+                                <FormControl>
+                                    <Input disabled={loading} placeholder="Текст для вашего баннера" {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>

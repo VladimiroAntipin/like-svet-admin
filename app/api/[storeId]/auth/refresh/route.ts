@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import prismadb from "@/lib/prismadb";
 import jwt from "jsonwebtoken";
 
+export const runtime = "nodejs";
+
 const ACCESS_TOKEN_EXPIRES_IN = "1d";
 const REFRESH_TOKEN_EXPIRES_IN = "30d";
 const REFRESH_MAX_AGE_SECONDS = 30 * 24 * 60 * 60; 

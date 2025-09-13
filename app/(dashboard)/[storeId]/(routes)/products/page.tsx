@@ -4,6 +4,8 @@ import { ProductClient } from "./components/client";
 import { ProductColumn } from "./components/columns";
 import { formatter } from "@/lib/utils";
 
+export const runtime = 'nodejs';
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ProductsPage = async ({ params }: any) => {
   const resolvedParams = await params;

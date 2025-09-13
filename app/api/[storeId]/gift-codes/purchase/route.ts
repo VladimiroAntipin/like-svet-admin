@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import prismadb from "@/lib/prismadb";
 
+export const runtime = 'nodejs';
+
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!);
 
 // funzione helper per generare un codice random

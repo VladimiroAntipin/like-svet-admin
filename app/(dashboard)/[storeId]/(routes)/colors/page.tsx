@@ -3,6 +3,8 @@ import { format } from "date-fns";
 import { ColorsClient } from "./components/client";
 import { ColorColumn } from "./components/columns";
 
+export const runtime = 'nodejs';
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const SizesPage = async ({ params }: any) => {
     const resolvedParams = await params;

@@ -34,10 +34,13 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   const onDelete = async () => {
     try {
       setLoading(true);
-      await axios.delete(`/api/${params.storeId}/gift-codes/${data.id}`);
+      await axios.delete(
+        `/api/${params.storeId}/gift-codes/${data.id}`,
+        { withCredentials: true }
+      );
       router.refresh();
       toast.success("Сертификат удален");
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error("Ошибка при удалении");
     } finally {

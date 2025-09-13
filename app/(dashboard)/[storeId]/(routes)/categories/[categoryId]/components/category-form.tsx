@@ -24,7 +24,7 @@ interface CategoryFormProps {
 const formSchema = z.object({
     name: z.string().min(1),
     imageUrl: z.string().min(1)
-})
+});
 
 type CategoryFormValues = z.infer<typeof formSchema>;
 
@@ -41,22 +41,27 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({ initialData }) => {
 
     const form = useForm<CategoryFormValues>({
         resolver: zodResolver(formSchema),
-        defaultValues: initialData || {
-            name: '',
-            imageUrl: ''
-        }
+        defaultValues: initialData || { name: '', imageUrl: '' }
     });
 
     const onSubmit = async (data: CategoryFormValues) => {
         try {
             setLoading(true);
             if (initialData) {
-                await axios.patch(`/api/${params.storeId}/categories/${params.categoryId}`, data);
+                await axios.patch(
+                    `/api/${params.storeId}/categories/${params.categoryId}`,
+                    data,
+                    { withCredentials: true }
+                );
             } else {
-                await axios.post(`/api/${params.storeId}/categories`, data);
+                await axios.post(
+                    `/api/${params.storeId}/categories`,
+                    data,
+                    { withCredentials: true }
+                );
             }
             router.refresh();
-            router.push(`/${params.storeId}/categories`)
+            router.push(`/${params.storeId}/categories`);
             toast.success(toastMessage);
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
@@ -69,7 +74,10 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({ initialData }) => {
     const onDelete = async () => {
         try {
             setLoading(true);
-            await axios.delete(`/api/${params.storeId}/categories/${params.categoryId}`);
+            await axios.delete(
+                `/api/${params.storeId}/categories/${params.categoryId}`,
+                { withCredentials: true }
+            );
             router.refresh();
             router.push(`/${params.storeId}/categories`);
             toast.success('Категория удалена');
@@ -80,7 +88,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({ initialData }) => {
             setLoading(false);
             setOpen(false);
         }
-    }
+    };
 
     return (
         <>
@@ -99,8 +107,13 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({ initialData }) => {
                     <FormField control={form.control} name="imageUrl" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Фото</FormLabel>
-                            <FormControl >
-                                <ImageUpload value={field.value ? [field.value] : []} disabled={loading} onChange={(url) => field.onChange(url)} onRemove={() => field.onChange('')} />
+                            <FormControl>
+                                <ImageUpload
+                                    value={field.value ? [field.value] : []}
+                                    disabled={loading}
+                                    onChange={(url) => field.onChange(url)}
+                                    onRemove={() => field.onChange('')}
+                                />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -109,7 +122,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({ initialData }) => {
                         <FormField control={form.control} name="name" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Название</FormLabel>
-                                <FormControl >
+                                <FormControl>
                                     <Input disabled={loading} placeholder="Название категории" {...field} />
                                 </FormControl>
                                 <FormMessage />
@@ -120,5 +133,5 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({ initialData }) => {
                 </form>
             </Form>
         </>
-    )
-}
+    );
+};

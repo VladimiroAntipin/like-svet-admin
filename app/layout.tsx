@@ -10,6 +10,8 @@ import { AuthProvider } from "@/context/auth-context";
 
 const inter = Inter({ subsets: ['latin'] });
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: "LikeSvet - Admin",
   description: "Панель управление магазина",

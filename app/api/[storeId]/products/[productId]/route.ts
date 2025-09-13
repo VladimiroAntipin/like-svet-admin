@@ -1,6 +1,8 @@
 import prismadb from "@/lib/prismadb";
-import { auth } from "@/lib/auth";
+import { authServer } from "@/lib/auth";
 import { NextResponse } from "next/server";
+
+export const runtime = 'nodejs';
 
 // ================= GET PRODUCT BY ID =================
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -30,16 +32,22 @@ export async function GET(req: Request, { params }: any) {
 // ================= UPDATE PRODUCT =================
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function PATCH(req: Request, { params }: any) {
-  const { storeId, productId } = await params;
+  const resolvedParams = await params;
+  const { storeId, productId } = resolvedParams;
 
   try {
-    const { userId } = await auth();
+    const { userId } = await authServer({
+      headers: {
+        get: (name: string) => req.headers.get(name),
+      },
+    });
     if (!userId) return new NextResponse("Unauthorized", { status: 401 });
 
     const body = await req.json();
     const { name, price, categoryId, sizeIds, colorIds, images, isFeatured, isArchived, isGiftCard, giftPrices } = body;
 
     if (!productId) return new NextResponse("Product ID is required", { status: 400 });
+    if (!storeId) return new NextResponse("Store ID is required", { status: 400 });
     if (!name) return new NextResponse("Name is required", { status: 400 });
     if (!images?.length) return new NextResponse("Images are required", { status: 400 });
     if (!categoryId) return new NextResponse("Category ID is required", { status: 400 });
@@ -51,38 +59,44 @@ export async function PATCH(req: Request, { params }: any) {
     const storeByUser = await prismadb.store.findFirst({ where: { id: storeId, userId } });
     if (!storeByUser) return new NextResponse("Unauthorized", { status: 403 });
 
-    // ✅ aggiorna solo i campi principali
+    // aggiorna i campi principali
     await prismadb.product.update({
       where: { id: productId },
       data: {
         name,
         price: isGiftCard ? null : price,
         categoryId,
-        isFeatured,
-        isArchived,
+        isFeatured: !!isFeatured,
+        isArchived: !!isArchived,
         isGiftCard: !!isGiftCard,
       },
     });
 
-    // ✅ immagini
+    // immagini: ricrea
     await prismadb.image.deleteMany({ where: { productId } });
-    await prismadb.image.createMany({ data: images.map((img: { url: string }) => ({ productId, url: img.url })) });
+    if (images && images.length) {
+      await prismadb.image.createMany({ data: images.map((img: { url: string }) => ({ productId, url: img.url })) });
+    }
 
-    // ✅ multiprezzi gift card
+    // multiprezzi gift card
     await prismadb.giftCardPrice.deleteMany({ where: { productId } });
     if (isGiftCard && giftPrices?.length) {
       await prismadb.giftCardPrice.createMany({ data: giftPrices.map((gp: { value: number }) => ({ productId, value: gp.value })) });
     }
 
-    // ✅ taglie
+    // taglie
     await prismadb.productSize.deleteMany({ where: { productId } });
-    await prismadb.productSize.createMany({ data: sizeIds.map((sizeId: string) => ({ productId, sizeId })) });
+    if (sizeIds && sizeIds.length) {
+      await prismadb.productSize.createMany({ data: sizeIds.map((sizeId: string) => ({ productId, sizeId })) });
+    }
 
-    // ✅ colori
+    // colori
     await prismadb.productColor.deleteMany({ where: { productId } });
-    await prismadb.productColor.createMany({ data: colorIds.map((colorId: string) => ({ productId, colorId })) });
+    if (colorIds && colorIds.length) {
+      await prismadb.productColor.createMany({ data: colorIds.map((colorId: string) => ({ productId, colorId })) });
+    }
 
-    // ✅ prodotto aggiornato completo
+    // prodotto aggiornato completo
     const updated = await prismadb.product.findUnique({
       where: { id: productId },
       include: {
@@ -106,43 +120,32 @@ export async function PATCH(req: Request, { params }: any) {
 export async function DELETE(req: Request, { params }: any) {
   const resolvedParams = await params;
   try {
-    const { userId } = await auth();
+    const { userId } = await authServer({
+      headers: {
+        get: (name: string) => req.headers.get(name),
+      },
+    });
     if (!userId) return new NextResponse("Unauthorized", { status: 401 });
-    if (!resolvedParams.productId) return new NextResponse("Product ID is required", { status: 400 });
+
+    const { storeId, productId } = resolvedParams;
+    if (!productId) return new NextResponse("Product ID is required", { status: 400 });
+    if (!storeId) return new NextResponse("Store ID is required", { status: 400 });
 
     const storeByUserId = await prismadb.store.findFirst({
-      where: { id: resolvedParams.storeId, userId }
+      where: { id: storeId, userId }
     });
     if (!storeByUserId) return new NextResponse("Unauthorized", { status: 403 });
 
-    await prismadb.giftCardPrice.deleteMany({
-      where: { productId: resolvedParams.productId }
-    });
+    // pulizia relazioni
+    await prismadb.giftCardPrice.deleteMany({ where: { productId } });
+    await prismadb.image.deleteMany({ where: { productId } });
+    await prismadb.productSize.deleteMany({ where: { productId } });
+    await prismadb.productColor.deleteMany({ where: { productId } });
+    await prismadb.favorite.deleteMany({ where: { productId } });
+    await prismadb.orderItem.deleteMany({ where: { productId } });
 
-    await prismadb.image.deleteMany({
-      where: { productId: resolvedParams.productId }
-    });
-
-    await prismadb.productSize.deleteMany({
-      where: { productId: resolvedParams.productId }
-    });
-
-    await prismadb.productColor.deleteMany({
-      where: { productId: resolvedParams.productId }
-    });
-
-    await prismadb.favorite.deleteMany({
-      where: { productId: resolvedParams.productId }
-    });
-
-    await prismadb.orderItem.deleteMany({
-      where: { productId: resolvedParams.productId }
-    });
-
-    // Finalmente elimina il prodotto
-    await prismadb.product.delete({
-      where: { id: resolvedParams.productId }
-    });
+    // elimina il prodotto
+    await prismadb.product.delete({ where: { id: productId } });
 
     return NextResponse.json({ message: "Product deleted" });
   } catch (error) {

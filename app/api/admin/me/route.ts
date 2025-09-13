@@ -3,6 +3,8 @@ import { verifyToken } from '@/lib/server/auth/tokens';
 import prismadb from '@/lib/prismadb';
 import { authConfig } from '@/lib/server/auth/config';
 
+export const runtime = 'nodejs';
+
 export async function GET(request: NextRequest) {
   try {
     const accessToken = request.cookies.get(authConfig.accessTokenCookieName)?.value;
@@ -11,7 +13,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, userId: null, email: null });
     }
 
-    const payload = verifyToken(accessToken);
+    const payload = await verifyToken(accessToken);
 
     if (!payload) {
       return NextResponse.json({ success: false, userId: null, email: null });
@@ -26,10 +28,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, userId: null, email: null });
     }
 
-    return NextResponse.json({ success: true, userId: user.id, email: user.email }); 
-    
-  } catch (error) {
-    console.error('Error in /api/auth/me:', error);
+    return NextResponse.json({ success: true, userId: user.id, email: user.email });
+  } catch {
     return NextResponse.json({ success: false, userId: null, email: null });
   }
 }

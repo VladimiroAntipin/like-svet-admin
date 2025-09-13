@@ -1,7 +1,9 @@
 import prismadb from "@/lib/prismadb";
-import { auth } from "@/lib/auth";
+import { authServer } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
+
+export const runtime = 'nodejs';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function GET(req: Request, { params }: any) {
@@ -20,7 +22,7 @@ export async function GET(req: Request, { params }: any) {
     return NextResponse.json(customer);
   } catch (error) {
     console.error("[CUSTOMER_GET]", error);
-    return new NextResponse("Не удалось получить клиента", { status: 500 });
+    return new NextResponse("Failed to get customer", { status: 500 });
   }
 }
 
@@ -28,7 +30,12 @@ export async function GET(req: Request, { params }: any) {
 export async function PATCH(req: Request, { params }: any) {
   const resolvedParams = await params;
   try {
-    const { userId } = await auth();
+    const { userId } = await authServer({
+      headers: {
+        get: (name: string) => req.headers.get(name),
+      },
+    });
+
     const { storeId, customerId } = resolvedParams;
 
     if (!userId) return new NextResponse("Unauthorized", { status: 401 });
@@ -64,7 +71,7 @@ export async function PATCH(req: Request, { params }: any) {
     return NextResponse.json(updatedCustomer);
   } catch (error) {
     console.error("[CUSTOMER_PATCH]", error);
-    return new NextResponse("Не удалось обновить клиента", { status: 500 });
+    return new NextResponse("Failed to update customer", { status: 500 });
   }
 }
 
@@ -72,11 +79,16 @@ export async function PATCH(req: Request, { params }: any) {
 export async function DELETE(req: Request, { params }: any) {
   const resolvedParams = await params;
   try {
-    const { userId } = await auth();
+    const { userId } = await authServer({
+      headers: {
+        get: (name: string) => req.headers.get(name),
+      },
+    });
+
     const { storeId, customerId } = resolvedParams;
 
     if (!userId) return new NextResponse("Unauthorized", { status: 401 });
-    if (!customerId) return new NextResponse("Customer ID is required", { status: 400 });
+    if (!storeId || !customerId) return new NextResponse("Store ID and Customer ID required", { status: 400 });
 
     const storeByUserId = await prismadb.store.findFirst({
       where: { id: storeId, userId },
@@ -103,12 +115,12 @@ export async function DELETE(req: Request, { params }: any) {
       });
     });
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: "Customer deleted successfully. Orders kept in database.",
-      success: true 
+      success: true,
     });
   } catch (error) {
     console.error("[CUSTOMER_DELETE]", error);
-    return new NextResponse("Не удалось удалить клиента", { status: 500 });
+    return new NextResponse("Failed to delete customer", { status: 500 });
   }
 }

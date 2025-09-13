@@ -3,6 +3,8 @@ import { OrderClient } from "./components/client";
 import { OrderColumn } from "./components/columns";
 import { formatter } from "@/lib/utils";
 
+export const runtime = 'nodejs';
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const OrdersPage = async ({ params }: any) => {
   const { storeId } = await params;

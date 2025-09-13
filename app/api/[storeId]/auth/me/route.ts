@@ -3,6 +3,8 @@ import { jwtVerify } from "jose";
 import prismadb from "@/lib/prismadb";
 import bcrypt from "bcryptjs";
 
+export const runtime = 'nodejs';
+
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

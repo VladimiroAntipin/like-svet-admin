@@ -4,6 +4,8 @@ import { generateAccessToken, generateRefreshToken } from '@/lib/server/auth/tok
 import { authConfig } from '@/lib/server/auth/config';
 import prismadb from '@/lib/prismadb';
 
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json();
@@ -15,9 +17,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const user = await prismadb.admin.findUnique({
-      where: { email },
-    });
+    const user = await prismadb.admin.findUnique({ where: { email } });
 
     if (!user) {
       return NextResponse.json(
@@ -35,20 +35,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const accessToken = generateAccessToken({
-      userId: user.id,
-      tokenVersion: user.tokenVersion,
-    });
+    const accessToken = await generateAccessToken({ userId: user.id, tokenVersion: user.tokenVersion });
+    const refreshToken = await generateRefreshToken({ userId: user.id, tokenVersion: user.tokenVersion });
 
-    const refreshToken = generateRefreshToken({
-      userId: user.id,
-      tokenVersion: user.tokenVersion,
-    });
-
-    const response = NextResponse.json({
-      success: true,
-      userId: user.id,
-    });
+    const response = NextResponse.json({ success: true, userId: user.id });
 
     const isProd = process.env.NODE_ENV === 'production';
 
@@ -71,11 +61,7 @@ export async function POST(request: NextRequest) {
     });
 
     return response;
-  } catch (error) {
-    console.error('Error during login:', error);
-    return NextResponse.json(
-      { success: false, error: 'Internal error' },
-      { status: 500 }
-    );
+  } catch {
+    return NextResponse.json({ success: false, error: 'Internal error' }, { status: 500 });
   }
 }

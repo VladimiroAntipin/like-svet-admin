@@ -28,10 +28,13 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   const onDelete = async () => {
     try {
       setLoading(true);
-      await axios.delete(`/api/${params.storeId}/customers/${data.id}`);
+      await axios.delete(
+        `/api/${params.storeId}/customers/${data.id}`,
+        { withCredentials: true }
+      );
       router.refresh();
       toast.success("Клиент удален");
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error("Ошибка при удалении клиента");
     } finally {

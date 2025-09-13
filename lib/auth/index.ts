@@ -16,9 +16,7 @@ function parseCookies(cookieString: string): Record<string, string> {
 }
 
 // --- server-side auth ---
-// NOTICE: we dynamically import server-only modules here so this file stays client-safe.
 export async function authServer(request?: AuthRequest): Promise<{ userId: string; email: string | null }> {
-  // import server modules only when running on the server
   const [{ authConfig }, { verifyToken }, prismadbModule] = await Promise.all([
     import('@/lib/server/auth/config'),
     import('@/lib/server/auth/tokens'),
@@ -31,7 +29,9 @@ export async function authServer(request?: AuthRequest): Promise<{ userId: strin
 
   if (request && 'headers' in request && typeof request.headers.get === 'function') {
     const cookieHeader = request.headers.get('cookie') || '';
+    console.log('Cookie header:', cookieHeader); 
     accessToken = parseCookies(cookieHeader)[authConfig.accessTokenCookieName];
+    console.log('Parsed access token:', accessToken);
   } else {
     try {
       const { cookies } = await import('next/headers');
@@ -44,7 +44,7 @@ export async function authServer(request?: AuthRequest): Promise<{ userId: strin
 
   if (!accessToken) throw new Error('Not authenticated');
 
-  const payload = verifyToken(accessToken);
+  const payload = await verifyToken(accessToken);
   if (!payload) throw new Error('Token not valid');
 
   const user = await prismadb.admin.findUnique({
@@ -52,52 +52,37 @@ export async function authServer(request?: AuthRequest): Promise<{ userId: strin
     select: { id: true, email: true, tokenVersion: true },
   });
 
-  if (!user || user.tokenVersion !== payload.tokenVersion) {
-    throw new Error('Token revoked or user not found');
-  }
+  if (!user) throw new Error('Token revoked or user not found');
+  if (user.tokenVersion !== payload.tokenVersion) throw new Error('Token revoked or user not found');
 
   return { userId: user.id, email: user.email };
 }
 
 // --- client-side auth ---
-// dedupe: pending promise a livello di modulo
 let pendingAuthClient: Promise<{ userId: string; email: string | null }> | null = null;
 
 export async function authClient(): Promise<{ userId: string; email: string | null }> {
-  // se una richiesta è già in corso, riusala
-  if (pendingAuthClient) {
-    return pendingAuthClient;
-  }
+  if (pendingAuthClient) return pendingAuthClient;
 
   pendingAuthClient = (async () => {
-    try {
-      const res = await fetch('/api/admin/me', {
-        method: 'GET',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-      });
+    const res = await fetch('/api/admin/me', {
+      method: 'GET',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+    });
 
-      if (!res.ok) {
-        throw new Error('Not authenticated');
-      }
+    if (!res.ok) throw new Error('Not authenticated');
 
-      const data = await res.json().catch(() => null);
-
-      if (data?.success && data.userId) {
-        return { userId: data.userId, email: data.email || null };
-      }
-
-      throw new Error('Not authenticated');
-    } finally {
-      pendingAuthClient = null;
-    }
+    const data = await res.json().catch(() => null);
+    if (data?.success && data.userId) return { userId: data.userId, email: data.email || null };
+    throw new Error('Not authenticated');
   })();
 
-  pendingAuthClient
-    .then(() => { pendingAuthClient = null; })
-    .catch(() => { pendingAuthClient = null; });
-
-  return pendingAuthClient;
+  try {
+    return await pendingAuthClient;
+  } finally {
+    pendingAuthClient = null;
+  }
 }
 
 // --- unified entry ---
@@ -107,13 +92,4 @@ export async function auth(request?: AuthRequest): Promise<{ userId: string; ema
   } else {
     return authClient();
   }
-}
-
-// --- helpers separati se serve ---
-export async function authServerOnly(request?: AuthRequest) {
-  return authServer(request);
-}
-
-export async function authApi(request: AuthRequest) {
-  return authServer(request);
 }

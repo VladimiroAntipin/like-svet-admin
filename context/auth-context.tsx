@@ -9,7 +9,7 @@ interface AuthContextType {
   email: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signIn: (email: string, password: string, redirectTo?: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
 }
@@ -24,16 +24,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const router = useRouter();
   const bcRef = useRef<BroadcastChannel | null>(null);
-
-  // dedupe pending auth check
   const pendingCheckRef = useRef<Promise<{ userId: string | null; email: string | null } | null> | null>(null);
   const mountedRef = useRef(true);
 
   useEffect(() => {
     mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-    };
+    return () => { mountedRef.current = false; };
   }, []);
 
   const checkAuth = useCallback(async (): Promise<{ userId: string | null; email: string | null } | null> => {
@@ -42,19 +38,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const p = (async () => {
       setIsLoading(true);
       try {
-        // usa il wrapper auth(): lato client farà fetch('/api/admin/me')
         const { userId, email } = await auth();
+
         if (!mountedRef.current) return null;
+
         setUserId(userId);
         setEmail(email ?? null);
         setIsAuthenticated(!!userId);
+
         return { userId, email: email ?? null };
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
         if (!mountedRef.current) return null;
+
         setUserId(null);
         setEmail(null);
         setIsAuthenticated(false);
+
         return null;
       } finally {
         if (mountedRef.current) setIsLoading(false);
@@ -66,7 +66,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return p;
   }, []);
 
-  // BroadcastChannel multi-tab
   useEffect(() => {
     if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
       try {
@@ -79,26 +78,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setEmail(null);
             setIsAuthenticated(false);
             localStorage.setItem('passwordAuthorized', 'false');
-            if (typeof window !== 'undefined' && window.location.pathname !== '/sign-in') {
-              router.push('/sign-in');
-            }
+            if (window.location.pathname !== '/sign-in') router.push('/sign-in');
           }
         };
-      } catch {
-        // BroadcastChannel could be not be supported in some environments
+      } catch (err) {
+        console.error('[Auth] BroadcastChannel error:', err);
       }
     }
 
-    // initial check (deduped)
     checkAuth();
 
-    return () => {
-      try { bcRef.current?.close(); } catch { /* ignore */ }
-    };
+    return () => { try { bcRef.current?.close(); } catch { } };
   }, [checkAuth, router]);
 
-  // --- login ---
-  const signIn = async (emailArg: string, password: string) => {
+  const signIn = async (emailArg: string, password: string, redirectTo = '/') => {
     try {
       const res = await fetch('/api/admin/login', {
         method: 'POST',
@@ -108,23 +101,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       const data = await res.json().catch(() => null);
+
       if (data?.success) {
-        // aggiorna stato (riusa pending check se presente)
         await checkAuth();
-        try { bcRef.current?.postMessage('signIn'); } catch { /* ignore */ }
+        try { bcRef.current?.postMessage('signIn'); } catch { }
         localStorage.setItem('passwordAuthorized', 'true');
-        router.push('/');
+        window.location.assign(redirectTo);
         return { success: true };
       }
 
       return { success: false, error: data?.error || 'Errore login' };
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       return { success: false, error: 'Connection error' };
     }
   };
 
-  // --- logout ---
   const signOut = async () => {
     try {
       await fetch('/api/admin/logout', {
@@ -132,21 +124,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
       });
-    } catch (err) {
-      console.error('[AuthProvider] signOut error', err);
     } finally {
       setUserId(null);
       setEmail(null);
       setIsAuthenticated(false);
       localStorage.setItem('passwordAuthorized', 'false');
-      try { bcRef.current?.postMessage('signOut'); } catch { /* ignore */ }
-      if (typeof window !== 'undefined' && window.location.pathname !== '/sign-in') {
-        router.push('/sign-in');
-      }
+      try { bcRef.current?.postMessage('signOut'); } catch { }
+      if (window.location.pathname !== '/sign-in') router.push('/sign-in');
     }
   };
 
-  // --- refresh session ---
   const refreshSession = useCallback(async () => {
     try {
       const res = await fetch('/api/auth/refresh', {
@@ -158,37 +145,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (data?.success) {
         await checkAuth();
-        try { bcRef.current?.postMessage('refresh'); } catch { /* ignore */ }
+        try { bcRef.current?.postMessage('refresh'); } catch { }
       } else {
         await signOut();
       }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       await signOut();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checkAuth]);
 
-  // --- auto refresh ogni 10 minuti ---
   useEffect(() => {
     const interval = setInterval(() => {
-      if (isAuthenticated) refreshSession();
+      if (isAuthenticated && !isLoading) {
+        refreshSession();
+      }
     }, 10 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [isAuthenticated, refreshSession]);
+  }, [isAuthenticated, isLoading, refreshSession]);
 
   return (
-    <AuthContext.Provider
-      value={{
-        userId,
-        email,
-        isAuthenticated,
-        isLoading,
-        signIn,
-        signOut,
-        refreshSession,
-      }}
-    >
+    <AuthContext.Provider value={{ userId, email, isAuthenticated, isLoading, signIn, signOut, refreshSession }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import prismadb from "@/lib/prismadb";
 
+export const runtime = 'nodejs';
+
 // GET single gift code
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function GET(req: Request, { params }: any) {

@@ -3,6 +3,8 @@ import { format } from "date-fns";
 import { ReviewClient } from "./components/client";
 import { ReviewColumn } from "./components/columns";
 
+export const runtime = 'nodejs';
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const BillboardsPage = async ({ params }: any) => {
     const resolvedParams = await params;

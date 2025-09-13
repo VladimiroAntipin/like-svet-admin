@@ -2,6 +2,8 @@ import prismadb from "@/lib/prismadb";
 import { GiftCodesClient } from "./components/client";
 import { GiftCodeColumn } from "./components/columns";
 
+export const runtime = 'nodejs';
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const GiftCodesPage = async ({ params }: any) => {
   const resolvedParams = await params;

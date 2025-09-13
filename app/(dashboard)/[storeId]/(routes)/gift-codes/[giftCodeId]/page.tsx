@@ -1,6 +1,8 @@
 import prismadb from "@/lib/prismadb";
 import { GiftCodeForm } from "./components/gift-code-form";
 
+export const runtime = 'nodejs';
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const GiftCodePage = async ({ params }: any) => {
   const { giftCodeId } = await params;

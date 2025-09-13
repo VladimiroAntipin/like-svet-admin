@@ -3,9 +3,18 @@ import { redirect } from "next/navigation";
 import Navbar from "@/components/navbar";
 import { auth } from "@/lib/auth";
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardLayout({ children, params }: { children: React.ReactNode; params: { storeId: string } }) {
-    const { userId } = await auth();
-    const resolvedParams = await params;
+
+    let userId: string | null = null;
+    try {
+        const authData = await auth();
+        userId = authData.userId;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (err) {
+    }
 
     if (!userId) {
         redirect('/sign-in');
@@ -13,13 +22,14 @@ export default async function DashboardLayout({ children, params }: { children: 
 
     const store = await prismadb.store.findFirst({
         where: {
-            id: resolvedParams.storeId,
+            id: params.storeId,
             userId
         }
     });
 
     if (!store) {
         redirect('/');
+    } else {
     }
 
     return (

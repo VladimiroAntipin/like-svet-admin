@@ -56,7 +56,6 @@ export const GiftCodeForm: React.FC<GiftCodeFormProps> = ({ initialData }) => {
   const toastMessage = initialData ? "Сертиификат обновлен" : "Сертификат создан";
   const action = initialData ? "Сохранить изменения" : "Создать";
 
-  // default: 365 giorni dalla data corrente
   const defaultExpiry = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
 
   const form = useForm<GiftCodeFormValues>({
@@ -86,14 +85,19 @@ export const GiftCodeForm: React.FC<GiftCodeFormProps> = ({ initialData }) => {
             ...data,
             amount: data.amount * 100,
             expiresAt: data.expiresAt || defaultExpiry,
-          }
+          },
+          { withCredentials: true }
         );
       } else {
-        await axios.post(`/api/${params.storeId}/gift-codes`, {
-          ...data,
-          amount: data.amount * 100,
-          expiresAt: data.expiresAt || defaultExpiry,
-        });
+        await axios.post(
+          `/api/${params.storeId}/gift-codes`,
+          {
+            ...data,
+            amount: data.amount * 100,
+            expiresAt: data.expiresAt || defaultExpiry,
+          },
+          { withCredentials: true }
+        );
       }
       router.refresh();
       router.push(`/${params.storeId}/gift-codes`);
@@ -108,7 +112,10 @@ export const GiftCodeForm: React.FC<GiftCodeFormProps> = ({ initialData }) => {
   const onDelete = async () => {
     try {
       setLoading(true);
-      await axios.delete(`/api/${params.storeId}/gift-codes/${params.giftCodeId}`);
+      await axios.delete(
+        `/api/${params.storeId}/gift-codes/${params.giftCodeId}`,
+        { withCredentials: true }
+      );
       router.refresh();
       router.push(`/${params.storeId}/gift-codes`);
       toast.success("Сертификат удален");
@@ -145,7 +152,6 @@ export const GiftCodeForm: React.FC<GiftCodeFormProps> = ({ initialData }) => {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full">
-          {/* Код */}
           <FormField
             control={form.control}
             name="code"
@@ -160,7 +166,6 @@ export const GiftCodeForm: React.FC<GiftCodeFormProps> = ({ initialData }) => {
             )}
           />
 
-          {/* Сумма */}
           <FormField
             control={form.control}
             name="amount"
@@ -183,7 +188,6 @@ export const GiftCodeForm: React.FC<GiftCodeFormProps> = ({ initialData }) => {
             )}
           />
 
-          {/* Дата окончания */}
           <FormField
             control={form.control}
             name="expiresAt"
@@ -215,7 +219,6 @@ export const GiftCodeForm: React.FC<GiftCodeFormProps> = ({ initialData }) => {
             )}
           />
 
-          {/* Активен */}
           <FormField
             control={form.control}
             name="isActive"

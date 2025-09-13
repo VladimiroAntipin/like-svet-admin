@@ -3,6 +3,8 @@ import { BillboardForm } from "./components/billboard-form";
 import { ObjectId } from "mongodb";
 import { Billboard } from "@prisma/client";
 
+export const runtime = 'nodejs';
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const BillboardPage = async ({ params }: any) => {
   const { billboardId } = params;

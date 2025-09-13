@@ -2,6 +2,8 @@ import prismadb from "@/lib/prismadb";
 import { ColorForm } from "./components/color-form";
 import { ObjectId } from "mongodb";
 
+export const runtime = 'nodejs';
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ColorPage = async ({ params }: any) => {
   const resolvedParams = await params;

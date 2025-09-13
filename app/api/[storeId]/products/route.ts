@@ -1,12 +1,19 @@
 import prismadb from "@/lib/prismadb";
-import { auth } from "@/lib/auth";
+import { authServer } from "@/lib/auth";
 import { NextResponse } from "next/server";
+
+export const runtime = 'nodejs';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function POST(req: Request, { params }: any) {
   const resolvedParams = await params;
   try {
-    const { userId } = await auth();
+    const { userId } = await authServer({
+      headers: {
+        get: (name: string) => req.headers.get(name),
+      },
+    });
+
     const body = await req.json();
     const { name, price, categoryId, sizeIds, colorIds, images, isFeatured, isArchived, isGiftCard, giftPrices } = body;
 
@@ -15,8 +22,8 @@ export async function POST(req: Request, { params }: any) {
     if (!images || !images.length) return new NextResponse("Images are required", { status: 400 });
     if (!resolvedParams.storeId) return new NextResponse("Store ID is required", { status: 400 });
     if (!categoryId) return new NextResponse("Category ID is required", { status: 400 });
-    if (!sizeIds?.length) return new NextResponse("At least one size is required", { status: 400 });
-    if (!colorIds?.length) return new NextResponse("At least one color is required", { status: 400 });
+    if (!sizeIds || !Array.isArray(sizeIds) || !sizeIds.length) return new NextResponse("At least one size is required", { status: 400 });
+    if (!colorIds || !Array.isArray(colorIds) || !colorIds.length) return new NextResponse("At least one color is required", { status: 400 });
 
     if (isGiftCard && (!giftPrices || !giftPrices.length)) {
       return new NextResponse("Gift prices are required", { status: 400 });
@@ -35,8 +42,8 @@ export async function POST(req: Request, { params }: any) {
         name,
         price: isGiftCard ? null : price,
         isGiftCard: !!isGiftCard,
-        isFeatured,
-        isArchived,
+        isFeatured: !!isFeatured,
+        isArchived: !!isArchived,
         categoryId,
         storeId: resolvedParams.storeId,
         images: { createMany: { data: images.map((img: { url: string }) => ({ url: img.url })) } },
@@ -46,13 +53,17 @@ export async function POST(req: Request, { params }: any) {
       },
     });
 
-    await prismadb.productSize.createMany({
-      data: sizeIds.map((sizeId: string) => ({ productId: product.id, sizeId })),
-    });
+    if (sizeIds && sizeIds.length) {
+      await prismadb.productSize.createMany({
+        data: sizeIds.map((sizeId: string) => ({ productId: product.id, sizeId })),
+      });
+    }
 
-    await prismadb.productColor.createMany({
-      data: colorIds.map((colorId: string) => ({ productId: product.id, colorId })),
-    });
+    if (colorIds && colorIds.length) {
+      await prismadb.productColor.createMany({
+        data: colorIds.map((colorId: string) => ({ productId: product.id, colorId })),
+      });
+    }
 
     return NextResponse.json(product);
   } catch (error) {
@@ -70,7 +81,8 @@ export async function GET(req: Request, { params }: any) {
     const categoryId = searchParams.get("categoryId") || undefined;
     const sizeId = searchParams.get("sizeId") || undefined;
     const colorId = searchParams.get("colorId") || undefined;
-    const isFeatured = searchParams.get("isFeatured");
+    const isFeaturedParam = searchParams.get("isFeatured");
+    const isFeatured = isFeaturedParam === "true" ? true : undefined;
 
     if (!resolvedParams.storeId) return new NextResponse("Store ID is required", { status: 400 });
 
@@ -79,7 +91,7 @@ export async function GET(req: Request, { params }: any) {
         storeId: resolvedParams.storeId,
         categoryId,
         isArchived: false,
-        isFeatured: isFeatured ? true : undefined,
+        isFeatured,
         ...(sizeId && { productSizes: { some: { sizeId } } }),
         ...(colorId && { productColors: { some: { colorId } } }),
       },

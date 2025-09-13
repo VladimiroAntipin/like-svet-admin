@@ -51,9 +51,17 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ initialData }) => {
         try {
             setLoading(true);
             if (initialData) {
-                await axios.patch(`/api/${params.storeId}/reviews/${params.reviewId}`, data);
+                await axios.patch(
+                    `/api/${params.storeId}/reviews/${params.reviewId}`,
+                    data,
+                    { withCredentials: true }
+                );
             } else {
-                await axios.post(`/api/${params.storeId}/reviews`, data);
+                await axios.post(
+                    `/api/${params.storeId}/reviews`,
+                    data,
+                    { withCredentials: true }
+                );
             }
             router.refresh();
             router.push(`/${params.storeId}/reviews`)
@@ -69,7 +77,10 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ initialData }) => {
     const onDelete = async () => {
         try {
             setLoading(true);
-            await axios.delete(`/api/${params.storeId}/reviews/${params.reviewId}`);
+            await axios.delete(
+                `/api/${params.storeId}/reviews/${params.reviewId}`,
+                { withCredentials: true }
+            );
             router.refresh();
             router.push(`/${params.storeId}/reviews`);
             toast.success('Отзыв удален');

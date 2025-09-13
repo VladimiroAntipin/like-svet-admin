@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 
+export const dynamic = 'force-dynamic';
 
 const validateEmail = (value: string) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -53,18 +54,16 @@ export default function SignInPage() {
     setLoading(true);
 
     try {
-      const result = await signIn(email, password);
+      const result = await signIn(email, password, redirectTo);
 
-      if (result.success) {
-        window.location.href = redirectTo;
-      } else {
+      if (!result.success) {
         setServerErrors({
           email: result.error || 'Ошибка авторизации',
           password: result.error || 'Ошибка авторизации'
         });
       }
-    } catch (err) {
-      console.error(err);
+
+    } catch {
       setServerErrors({ email: 'Ошибка сервера', password: 'Ошибка сервера' });
     } finally {
       setLoading(false);

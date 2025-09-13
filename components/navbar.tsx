@@ -4,8 +4,10 @@ import prismadb from "@/lib/prismadb";
 import { ThemeToggle } from "./theme-toggle";
 import { MainNav } from "@/components/main-nav";
 import StoreSwitcher from "@/components/store-switcher";
-import jwt from "jsonwebtoken";
 import { UserMenu } from "./ui/user-menu";
+import { verifyToken } from "@/lib/server/auth/tokens";
+
+export const runtime = 'nodejs';
 
 const Navbar = async () => {
   const cookieStore = await cookies();
@@ -15,18 +17,13 @@ const Navbar = async () => {
     redirect("/sign-in");
   }
 
-  let user: { adminId: string; email: string } | null = null;
+  const user = await verifyToken(accessToken!);
 
-  try {
-    user = jwt.verify(accessToken, process.env.JWT_SECRET!) as { adminId: string; email: string };
-  } catch {
-    // se scaduto, vai al sign-in
+  if (!user) {
     redirect("/sign-in");
   }
 
-  if (!user) redirect("/sign-in");
-
-  const stores = await prismadb.store.findMany({ where: { userId: user.adminId } });
+  const stores = await prismadb.store.findMany({ where: { userId: user.userId } });
 
   return (
     <div

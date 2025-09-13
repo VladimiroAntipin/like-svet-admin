@@ -3,6 +3,8 @@ import { format } from "date-fns";
 import { BillboardClient } from "./components/client";
 import { BillboardColumn } from "./components/columns";
 
+export const runtime = 'nodejs';
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const BillboardsPage = async ({ params }: any) => {
     const resolvedParams = await params;

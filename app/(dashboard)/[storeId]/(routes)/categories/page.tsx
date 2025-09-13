@@ -3,6 +3,8 @@ import { format } from "date-fns";
 import { CategoryClient } from "./components/client";
 import { CategoryColumn } from "./components/columns";
 
+export const runtime = 'nodejs';
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const CategoriesPage = async ({ params }: any) => {
     const resolvedParams = await params;
