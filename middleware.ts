@@ -24,14 +24,7 @@ const ALLOWED_ORIGINS = [
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const origin = req.headers.get('origin') || '';
-
-  if (PUBLIC_ROUTES.some((pattern) => pattern.test(pathname))) {
-    return NextResponse.next();
-  }
-
-  if (req.method === 'POST' && ['/api/admin/login', '/api/admin/register'].includes(pathname)) {
-    return NextResponse.next();
-  }
+  const accessToken = req.cookies.get(authConfig.accessTokenCookieName)?.value;
 
   if (req.method === 'OPTIONS') {
     const preflight = new NextResponse(null, { status: 204 });
@@ -51,7 +44,12 @@ export function middleware(req: NextRequest) {
     return preflight;
   }
 
-  const accessToken = req.cookies.get(authConfig.accessTokenCookieName)?.value;
+  if (PUBLIC_ROUTES.some((pattern) => pattern.test(pathname))) {
+    if (accessToken && (pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up'))) {
+      return NextResponse.redirect(new URL('/', req.url)); // o dashboard store
+    }
+    return NextResponse.next();
+  }
 
   if (!accessToken) {
     const loginUrl = new URL('/sign-in', req.url);
@@ -64,7 +62,6 @@ export function middleware(req: NextRequest) {
 
   const res = NextResponse.next();
 
-  // CORS headers (solo se origin valido)
   if (origin && ALLOWED_ORIGINS.includes(origin)) {
     res.headers.set('Access-Control-Allow-Origin', origin);
     res.headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
@@ -76,7 +73,6 @@ export function middleware(req: NextRequest) {
     res.headers.set('Vary', 'Origin');
   }
 
-  // Blocca cache per route private
   res.headers.set('Cache-Control', 'no-store');
 
   return res;
