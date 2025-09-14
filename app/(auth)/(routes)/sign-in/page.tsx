@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
+import { Eye, EyeOff } from "lucide-react";
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +32,8 @@ export default function SignInPage() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [serverErrors, setServerErrors] = useState<{ email?: string; password?: string }>({});
   const [loading, setLoading] = useState(false);
+
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     const clientErrors = validateForm(email, password);
@@ -103,14 +106,23 @@ export default function SignInPage() {
         {/* Password */}
         <div className="flex flex-col">
           <label className="text-sm mb-1">Пароль</label>
-          <input
-            type="password"
-            autoComplete="new-password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            onBlur={() => setTouched(prev => ({ ...prev, password: true }))}
-            className="w-full border border-gray-400 px-3 py-2 text-sm focus:outline-none focus:border-black"
-          />
+          <div className="relative w-full">
+            <input
+              type={showPassword ? "text" : "password"}
+              autoComplete="new-password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              onBlur={() => setTouched(prev => ({ ...prev, password: true }))}
+              className="w-full border border-gray-400 px-3 py-2 text-sm focus:outline-none focus:border-black pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-600 hover:text-black"
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
           {(errors.password || serverErrors.password) && (
             <span className="text-red-500 text-xs mt-1">
               {errors.password || serverErrors.password}

@@ -1,18 +1,30 @@
 import { NextResponse } from 'next/server';
+import { authConfig } from '@/lib/server/auth/config';
+
+export const runtime = 'nodejs';
 
 export async function POST() {
-  console.log('[LogoutAPI] Logout request received');
-
   const response = NextResponse.json({ success: true });
 
-  // Log prima di cancellare
-  console.log('[LogoutAPI] Deleting cookies: admin_access_token, admin_refresh_token');
+  const isProd = process.env.NODE_ENV === 'production';
 
-  // Elimina i cookie
-  response.cookies.delete('admin_access_token');
-  response.cookies.delete('admin_refresh_token');
+  response.cookies.set(authConfig.accessTokenCookieName, '', {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
+    maxAge: 0,
+    path: '/',
+    domain: authConfig.cookieDomain,
+  });
 
-  console.log('[LogoutAPI] Cookies deleted successfully');
+  response.cookies.set(authConfig.refreshTokenCookieName, '', {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
+    maxAge: 0,
+    path: '/',
+    domain: authConfig.cookieDomain,
+  });
 
   return response;
 }
