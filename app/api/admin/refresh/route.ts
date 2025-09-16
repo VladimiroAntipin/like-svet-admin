@@ -56,19 +56,19 @@ export async function POST(request: NextRequest) {
     response.cookies.set(authConfig.accessTokenCookieName, newAccessToken, {
       httpOnly: true,
       secure: isProd,
-      sameSite: isProd ? 'none' : 'lax',
+      sameSite: isProd ? 'strict' : 'lax',
       maxAge: authConfig.accessTokenExpiry / 1000,
       path: '/',
-      domain: authConfig.cookieDomain,
+      domain: 'admin.likesvet.com',
     });
 
     response.cookies.set(authConfig.refreshTokenCookieName, newRefreshToken, {
       httpOnly: true,
       secure: isProd,
-      sameSite: isProd ? 'none' : 'lax',
+      sameSite: isProd ? 'strict' : 'lax',
       maxAge: authConfig.refreshTokenExpiry / 1000,
       path: '/',
-      domain: authConfig.cookieDomain,
+      domain: 'admin.likesvet.com',
     });
 
     return response;

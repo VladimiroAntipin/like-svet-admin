@@ -1,4 +1,3 @@
-// /app/api/cleanup-unpaid-orders/route.ts
 import prismadb from "@/lib/prismadb";
 import axios from "axios";
 import { NextResponse } from "next/server";
@@ -7,11 +6,11 @@ export const runtime = "nodejs";
 
 export async function GET() {
     try {
-        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+        const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
 
-        // Trova tutti gli ordini non pagati più vecchi di 5 minuti
+        // Trova tutti gli ordini non pagati più vecchi di 15 minuti
         const unpaidOrders = await prismadb.order.findMany({
-            where: { isPaid: false, createdAt: { lt: fiveMinutesAgo } },
+            where: { isPaid: false, createdAt: { lt: fifteenMinutesAgo } },
         });
 
         let processedCount = 0;
