@@ -10,9 +10,8 @@ const PUBLIC_ROUTES = [
 const ALLOWED_ORIGINS = [
   'http://localhost:3000',
   'http://localhost:3001',
-  'https://likesvet.com',
-  'https://www.likesvet.com',
-  'https://admin.likesvet.com',
+  'https://like-svet-admin.vercel.app',
+  'https://like-svet-site.vercel.app',
 ];
 
 export function middleware(req: NextRequest) {

@@ -5,7 +5,7 @@ export const authConfig = {
   refreshTokenExpiry: 30 * 24 * 60 * 60 * 1000,
   
   get cookieDomain() {
-    return process.env.NODE_ENV === 'production' ? 'admin.likesvet.com' : undefined;
+    return process.env.NODE_ENV === 'production' ? 'like-svet-admin.vercel.app' : undefined;
   },
   
   jwtSecret: (() => {

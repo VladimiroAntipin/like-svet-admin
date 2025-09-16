@@ -14,7 +14,7 @@ export async function POST() {
     sameSite: isProd ? 'strict' : 'lax',
     maxAge: 0,
     path: '/',
-    domain: 'admin.likesvet.com',
+    domain: 'like-svet-admin.vercel.app',
   });
 
   response.cookies.set(authConfig.refreshTokenCookieName, '', {
@@ -23,7 +23,7 @@ export async function POST() {
     sameSite: isProd ? 'strict' : 'lax',
     maxAge: 0,
     path: '/',
-    domain: 'admin.likesvet.com',
+    domain: 'like-svet-admin.vercel.app',
   });
 
   return response;
