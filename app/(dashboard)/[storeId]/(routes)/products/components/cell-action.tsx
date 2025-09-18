@@ -6,7 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Button } from "@/components/ui/button";
 import { Copy, Edit, MoreHorizontal, Trash } from "lucide-react";
 import toast from "react-hot-toast";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 import { AlertModal } from "@/components/modals/alert-modal";
 
@@ -19,6 +19,8 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
     const [open, setOpen] = useState(false);
     const router = useRouter();
     const params = useParams();
+    const searchParams = useSearchParams();
+    const currentPage = searchParams?.get("page") ?? "1";
 
     const onCopy = (id: string) => {
         navigator.clipboard.writeText(id);
@@ -28,13 +30,11 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
     const onDelete = async () => {
         try {
             setLoading(true);
-            await axios.delete(
-                `/api/${params.storeId}/products/${data.id}`,
-                { withCredentials: true }
-            );
+            await axios.delete(`/api/${params.storeId}/products/${data.id}`, { withCredentials: true });
             router.refresh();
+            router.push(`/${params.storeId}/products?page=${currentPage}`);
             toast.success('Товар удален');
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
             toast.error('Что то пошло не так');
         } finally {
@@ -47,9 +47,9 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
         <>
             <AlertModal isOpen={open} onClose={() => setOpen(false)} onConfirm={onDelete} loading={loading} />
             <DropdownMenu>
-                <DropdownMenuTrigger asChild >
+                <DropdownMenuTrigger asChild>
                     <Button variant='ghost' className="w-8 h-8 p-0 cursor-pointer">
-                        <span className='sr-only' >Меню</span>
+                        <span className='sr-only'>Меню</span>
                         <MoreHorizontal className="w-4 h-4" />
                     </Button>
                 </DropdownMenuTrigger>
@@ -59,7 +59,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
                         <Copy className="mr-2 h-4 w-4" />
                         Скопировать ID
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => router.push(`/${params.storeId}/products/${data.id}`)}>
+                    <DropdownMenuItem onClick={() => router.push(`/${params.storeId}/products/${data.id}?page=${currentPage}`)}>
                         <Edit className="mr-2 h-4 w-4" />
                         Редактировать
                     </DropdownMenuItem>

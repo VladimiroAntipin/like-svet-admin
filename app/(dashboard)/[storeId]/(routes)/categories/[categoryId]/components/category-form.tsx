@@ -11,7 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Category } from "@prisma/client";
 import axios from "axios";
 import { Trash } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
@@ -33,6 +33,9 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({ initialData }) => {
     const [loading, setLoading] = useState(false);
     const params = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
+
+    const currentPage = searchParams?.get("page") ?? "1";
 
     const title = initialData ? 'Редактировать категорию' : 'Создать категорию';
     const description = initialData ? 'Управление категориями для вашего магазина' : 'Создать категорию';
@@ -61,11 +64,11 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({ initialData }) => {
                 );
             }
             router.refresh();
-            router.push(`/${params.storeId}/categories`);
+            router.push(`/${params.storeId}/categories?page=${currentPage}`);
             toast.success(toastMessage);
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
-            toast.error('Не удалось обновить магазин');
+            toast.error('Не удалось обновить категорию');
         } finally {
             setLoading(false);
         }
@@ -79,9 +82,9 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({ initialData }) => {
                 { withCredentials: true }
             );
             router.refresh();
-            router.push(`/${params.storeId}/categories`);
+            router.push(`/${params.storeId}/categories?page=${currentPage}`);
             toast.success('Категория удалена');
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
             toast.error('Необхлдимо удалить все товары из этой категории');
         } finally {

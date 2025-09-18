@@ -6,7 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Button } from "@/components/ui/button";
 import { Copy, Edit, MoreHorizontal, Trash } from "lucide-react";
 import toast from "react-hot-toast";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 import { AlertModal } from "@/components/modals/alert-modal";
 
@@ -19,6 +19,8 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
     const [open, setOpen] = useState(false);
     const router = useRouter();
     const params = useParams();
+    const searchParams = useSearchParams();
+    const currentPage = searchParams?.get("page") ?? "1";
 
     const onCopy = (id: string) => {
         navigator.clipboard.writeText(id);
@@ -33,10 +35,11 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
                 { withCredentials: true }
             );
             router.refresh();
+            router.push(`/${params.storeId}/sizes?page=${currentPage}`);
             toast.success('Размер удален');
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
-            toast.error('Необхлдимо удалить все товары с этим размером');
+            toast.error('Необходимо удалить все товары с этим размером');
         } finally {
             setLoading(false);
             setOpen(false);

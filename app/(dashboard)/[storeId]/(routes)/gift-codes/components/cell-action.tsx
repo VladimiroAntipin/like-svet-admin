@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Copy, Edit, MoreHorizontal, Trash } from "lucide-react";
 import toast from "react-hot-toast";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 import { AlertModal } from "@/components/modals/alert-modal";
 
@@ -25,6 +25,8 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
+  const currentPage = searchParams?.get("page") ?? "1";
 
   const onCopy = (id: string) => {
     navigator.clipboard.writeText(id);
@@ -34,14 +36,13 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   const onDelete = async () => {
     try {
       setLoading(true);
-      await axios.delete(
-        `/api/${params.storeId}/gift-codes/${data.id}`,
-        { withCredentials: true }
-      );
+      await axios.delete(`/api/${params.storeId}/gift-codes/${data.id}`, {
+        withCredentials: true,
+      });
       router.refresh();
+      router.push(`/${params.storeId}/gift-codes?page=${currentPage}`);
       toast.success("Сертификат удален");
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
+    } catch {
       toast.error("Ошибка при удалении");
     } finally {
       setLoading(false);
@@ -72,7 +73,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() =>
-              router.push(`/${params.storeId}/gift-codes/${data.id}`)
+              router.push(`/${params.storeId}/gift-codes/${data.id}?page=${currentPage}`)
             }
           >
             <Edit className="mr-2 h-4 w-4" />

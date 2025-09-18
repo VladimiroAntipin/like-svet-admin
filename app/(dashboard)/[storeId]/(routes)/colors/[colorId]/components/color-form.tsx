@@ -11,7 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Color } from "@prisma/client";
 import axios from "axios";
 import { Trash } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
@@ -26,7 +26,7 @@ const formSchema = z.object({
     value: z.string().refine((val) => {
         return cssColorNames.includes(val.toLowerCase());
     }, {
-        message: "Insert a valid CSS color (es: red, blue, green)"
+        message: "Insert a valid CSS color (ex: red, blue, green)"
     })
 });
 
@@ -37,8 +37,11 @@ export const ColorForm: React.FC<ColorFormProps> = ({ initialData }) => {
     const [loading, setLoading] = useState(false);
     const params = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
 
-    const title = initialData ? 'Редактировать цветов' : 'Создать цвет';
+    const currentPage = searchParams?.get("page") ?? "1";
+
+    const title = initialData ? 'Редактировать цвет' : 'Создать цвет';
     const description = initialData ? 'Управление цветами товаров в магазине' : 'Создание нового цвета';
     const toastMessage = initialData ? 'Цвет обновлен' : 'Цвет создан';
     const action = initialData ? 'Сохранить' : 'Создать';
@@ -68,9 +71,9 @@ export const ColorForm: React.FC<ColorFormProps> = ({ initialData }) => {
                 );
             }
             router.refresh();
-            router.push(`/${params.storeId}/colors`)
+            router.push(`/${params.storeId}/colors?page=${currentPage}`);
             toast.success(toastMessage);
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
             toast.error('Не удалось обновить цвет');
         } finally {
@@ -86,16 +89,16 @@ export const ColorForm: React.FC<ColorFormProps> = ({ initialData }) => {
                 { withCredentials: true }
             );
             router.refresh();
-            router.push(`/${params.storeId}/colors`);
-            toast.success('цвет удален');
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            router.push(`/${params.storeId}/colors?page=${currentPage}`);
+            toast.success('Цвет удален');
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
-            toast.error('Необхлдимо удалить все товары с этой цвет перед удалением');
+            toast.error('Необхлдимо удалить все товары с этим цветом');
         } finally {
             setLoading(false);
             setOpen(false);
         }
-    }
+    };
 
     return (
         <>
@@ -115,7 +118,7 @@ export const ColorForm: React.FC<ColorFormProps> = ({ initialData }) => {
                         <FormField control={form.control} name="name" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Название</FormLabel>
-                                <FormControl >
+                                <FormControl>
                                     <Input disabled={loading} placeholder="Название цвета" {...field} />
                                 </FormControl>
                                 <FormMessage />
@@ -124,7 +127,7 @@ export const ColorForm: React.FC<ColorFormProps> = ({ initialData }) => {
                         <FormField control={form.control} name="value" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Цвет</FormLabel>
-                                <FormControl >
+                                <FormControl>
                                     <div className="flex items-center gap-x-4">
                                         <Input disabled={loading} placeholder="На англиском: red, blue..." {...field} />
                                         <div className="border p-4 rounded-full" style={{ backgroundColor: field.value }} />

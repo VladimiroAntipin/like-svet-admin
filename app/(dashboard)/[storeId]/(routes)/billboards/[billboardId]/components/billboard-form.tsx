@@ -11,7 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Billboard } from "@prisma/client";
 import axios from "axios";
 import { Trash } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
@@ -33,6 +33,7 @@ export const BillboardForm: React.FC<BillboardFormProps> = ({ initialData }) => 
     const [loading, setLoading] = useState(false);
     const params = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
 
     const title = initialData ? 'Редактировать баннер' : 'Создать баннер';
     const description = initialData ? 'Управление баннерами для вашего магазина' : 'Создание нового баннера';
@@ -46,6 +47,8 @@ export const BillboardForm: React.FC<BillboardFormProps> = ({ initialData }) => 
             imageUrl: ''
         }
     });
+
+    const getPage = () => searchParams?.get("page") ?? "1";
 
     const onSubmit = async (data: BillboardFormValues) => {
         try {
@@ -64,7 +67,8 @@ export const BillboardForm: React.FC<BillboardFormProps> = ({ initialData }) => 
                 );
             }
             router.refresh();
-            router.push(`/${params.storeId}/billboards`);
+            const page = getPage();
+            router.push(`/${params.storeId}/billboards?page=${page}`);
             toast.success(toastMessage);
         } catch (error) {
             console.error("[BILLBOARD_FORM]", error);
@@ -82,7 +86,8 @@ export const BillboardForm: React.FC<BillboardFormProps> = ({ initialData }) => 
                 { withCredentials: true }
             );
             router.refresh();
-            router.push(`/${params.storeId}/billboards`);
+            const page = getPage();
+            router.push(`/${params.storeId}/billboards?page=${page}`);
             toast.success('Баннер удален');
         } catch (error) {
             console.error("[BILLBOARD_FORM_DELETE]", error);

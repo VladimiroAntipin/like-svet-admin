@@ -18,7 +18,7 @@ import { Customer } from "@prisma/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { Trash, Eye, EyeOff } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
@@ -50,6 +50,8 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData }) => {
   const [showPassword, setShowPassword] = useState(false);
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const currentPage = searchParams?.get("page") ?? "1";
   const [balanceRub, setBalanceRub] = useState<number>(
     initialData ? (initialData.balance ?? 0) / 100 : 0
   );
@@ -65,27 +67,27 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData }) => {
     resolver: zodResolver(formSchema),
     defaultValues: initialData
       ? {
-        firstName: initialData.firstName || "",
-        lastName: initialData.lastName || "",
-        profileImage: initialData.profileImage || "",
-        birthDate: initialData.birthDate
-          ? new Date(initialData.birthDate).toISOString().split("T")[0]
-          : "",
-        email: initialData.email || "",
-        phone: initialData.phone || "",
-        password: "",
-        balance: initialData.balance ? initialData.balance / 100 : 0,
-      }
+          firstName: initialData.firstName || "",
+          lastName: initialData.lastName || "",
+          profileImage: initialData.profileImage || "",
+          birthDate: initialData.birthDate
+            ? new Date(initialData.birthDate).toISOString().split("T")[0]
+            : "",
+          email: initialData.email || "",
+          phone: initialData.phone || "",
+          password: "",
+          balance: initialData.balance ? initialData.balance / 100 : 0,
+        }
       : {
-        firstName: "",
-        lastName: "",
-        profileImage: "",
-        birthDate: "",
-        email: "",
-        phone: "",
-        password: "",
-        balance: 0,
-      },
+          firstName: "",
+          lastName: "",
+          profileImage: "",
+          birthDate: "",
+          email: "",
+          phone: "",
+          password: "",
+          balance: 0,
+        },
   });
 
   const onSubmit = async (data: CustomerFormValues) => {
@@ -112,7 +114,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData }) => {
       }
 
       router.refresh();
-      router.push(`/${params.storeId}/customers`);
+      router.push(`/${params.storeId}/customers?page=${currentPage}`);
       toast.success(toastMessage);
     } catch (error) {
       console.error(error);
@@ -130,7 +132,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData }) => {
         { withCredentials: true }
       );
       router.refresh();
-      router.push(`/${params.storeId}/customers`);
+      router.push(`/${params.storeId}/customers?page=${currentPage}`);
       toast.success("Клиент удален");
     } catch (error) {
       console.error(error);

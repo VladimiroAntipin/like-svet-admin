@@ -10,7 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Size } from "@prisma/client";
 import axios from "axios";
 import { Trash } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
@@ -32,8 +32,10 @@ export const SizeForm: React.FC<SizeFormProps> = ({ initialData }) => {
     const [loading, setLoading] = useState(false);
     const params = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const currentPage = searchParams?.get("page") ?? "1";
 
-    const title = initialData ? 'Редактировать размеров' : 'Создать размер';
+    const title = initialData ? 'Редактировать размер' : 'Создать размер';
     const description = initialData ? 'Управление размерами товаров в магазине' : 'Создание нового размера';
     const toastMessage = initialData ? 'Размер обновлен' : 'Размер создан';
     const action = initialData ? 'Сохранить' : 'Создать';
@@ -63,9 +65,9 @@ export const SizeForm: React.FC<SizeFormProps> = ({ initialData }) => {
                 );
             }
             router.refresh();
-            router.push(`/${params.storeId}/sizes`);
+            router.push(`/${params.storeId}/sizes?page=${currentPage}`);
             toast.success(toastMessage);
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
             toast.error('Не удалось обновить размер');
         } finally {
@@ -81,11 +83,11 @@ export const SizeForm: React.FC<SizeFormProps> = ({ initialData }) => {
                 { withCredentials: true }
             );
             router.refresh();
-            router.push(`/${params.storeId}/sizes`);
+            router.push(`/${params.storeId}/sizes?page=${currentPage}`);
             toast.success('Размер удален');
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
-            toast.error('Необхлдимо удалить все товары с этой размер перед удалением');
+            toast.error('Необходимо удалить все товары с этим размером перед удалением');
         } finally {
             setLoading(false);
             setOpen(false);
@@ -120,7 +122,7 @@ export const SizeForm: React.FC<SizeFormProps> = ({ initialData }) => {
                             <FormItem>
                                 <FormLabel>Размер</FormLabel>
                                 <FormControl >
-                                    <Input disabled={loading} placeholder="Значение (например:. 22мм)..." {...field} />
+                                    <Input disabled={loading} placeholder="Значение (например: 22мм)..." {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>

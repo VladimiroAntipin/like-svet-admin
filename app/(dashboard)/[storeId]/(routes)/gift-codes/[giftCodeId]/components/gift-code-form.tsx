@@ -3,7 +3,7 @@
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler, type Resolver } from "react-hook-form";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -35,7 +35,6 @@ const formSchema = z.object({
   expiresAt: z.date().nullable().optional(),
 });
 
-// Tipi derivati dallo schema
 type GiftCodeFormValues = z.infer<typeof formSchema>;
 
 interface GiftCodeFormProps {
@@ -45,6 +44,8 @@ interface GiftCodeFormProps {
 export const GiftCodeForm: React.FC<GiftCodeFormProps> = ({ initialData }) => {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const currentPage = searchParams?.get("page") ?? "1";
 
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -62,45 +63,44 @@ export const GiftCodeForm: React.FC<GiftCodeFormProps> = ({ initialData }) => {
     resolver: zodResolver(formSchema) as Resolver<GiftCodeFormValues>,
     defaultValues: initialData
       ? {
-        code: initialData.code,
-        amount: initialData.amount / 100,
-        isActive: initialData.isActive,
-        expiresAt: initialData.expiresAt ? new Date(initialData.expiresAt) : defaultExpiry,
-      }
+          code: initialData.code,
+          amount: initialData.amount / 100,
+          isActive: initialData.isActive,
+          expiresAt: initialData.expiresAt ? new Date(initialData.expiresAt) : defaultExpiry,
+        }
       : {
-        code: "",
-        amount: 0,
-        isActive: true,
-        expiresAt: defaultExpiry,
-      },
+          code: "",
+          amount: 0,
+          isActive: true,
+          expiresAt: defaultExpiry,
+        },
   });
 
   const onSubmit: SubmitHandler<GiftCodeFormValues> = async (data) => {
     try {
       setLoading(true);
+      const payload = {
+        ...data,
+        amount: data.amount * 100,
+        expiresAt: data.expiresAt || defaultExpiry,
+      };
+
       if (initialData) {
         await axios.patch(
           `/api/${params.storeId}/gift-codes/${params.giftCodeId}`,
-          {
-            ...data,
-            amount: data.amount * 100,
-            expiresAt: data.expiresAt || defaultExpiry,
-          },
+          payload,
           { withCredentials: true }
         );
       } else {
         await axios.post(
           `/api/${params.storeId}/gift-codes`,
-          {
-            ...data,
-            amount: data.amount * 100,
-            expiresAt: data.expiresAt || defaultExpiry,
-          },
+          payload,
           { withCredentials: true }
         );
       }
+
       router.refresh();
-      router.push(`/${params.storeId}/gift-codes`);
+      router.push(`/${params.storeId}/gift-codes?page=${currentPage}`);
       toast.success(toastMessage);
     } catch {
       toast.error("Ошибка при сохранении");
@@ -117,7 +117,7 @@ export const GiftCodeForm: React.FC<GiftCodeFormProps> = ({ initialData }) => {
         { withCredentials: true }
       );
       router.refresh();
-      router.push(`/${params.storeId}/gift-codes`);
+      router.push(`/${params.storeId}/gift-codes?page=${currentPage}`);
       toast.success("Сертификат удален");
     } catch {
       toast.error("Ошибка при удалении");

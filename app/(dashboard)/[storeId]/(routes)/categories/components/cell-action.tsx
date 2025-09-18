@@ -6,7 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Button } from "@/components/ui/button";
 import { Copy, Edit, MoreHorizontal, Trash } from "lucide-react";
 import toast from "react-hot-toast";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 import { AlertModal } from "@/components/modals/alert-modal";
 
@@ -19,6 +19,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
     const [open, setOpen] = useState(false);
     const router = useRouter();
     const params = useParams();
+    const searchParams = useSearchParams();
 
     const onCopy = (id: string) => {
         navigator.clipboard.writeText(id);
@@ -34,13 +35,22 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
             );
             router.refresh();
             toast.success('Категория удалена');
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
+            const currentPage = searchParams?.get("page") ?? "1";
+            router.push(`/${params.storeId}/categories?page=${currentPage}`);
+
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
             toast.error('Необхлдимо удалить все товары из этой категории');
         } finally {
             setLoading(false);
             setOpen(false);
         }
+    }
+
+    const handleEdit = () => {
+        const currentPage = searchParams?.get("page") ?? "1";
+        router.push(`/${params.storeId}/categories/${data.id}?page=${currentPage}`);
     }
 
     return (
@@ -59,7 +69,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
                         <Copy className="mr-2 h-4 w-4" />
                         Скопировать ID
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => router.push(`/${params.storeId}/categories/${data.id}`)}>
+                    <DropdownMenuItem onClick={handleEdit}>
                         <Edit className="mr-2 h-4 w-4" />
                         Редактировать
                     </DropdownMenuItem>

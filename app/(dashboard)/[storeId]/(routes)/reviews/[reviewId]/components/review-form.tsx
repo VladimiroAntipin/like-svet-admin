@@ -11,7 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Review } from "@prisma/client";
 import axios from "axios";
 import { Trash } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
@@ -33,6 +33,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ initialData }) => {
     const [loading, setLoading] = useState(false);
     const params = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
 
     const title = initialData ? 'Редактировать отзыв' : 'Создать отзыв';
     const description = initialData ? 'Управление отзывами для вашего магазина' : 'Создание нового отзыв';
@@ -46,6 +47,8 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ initialData }) => {
             imageUrl: ''
         }
     });
+
+    const getPage = () => searchParams?.get("page") ?? "1";
 
     const onSubmit = async (data: ReviewFormValues) => {
         try {
@@ -64,7 +67,8 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ initialData }) => {
                 );
             }
             router.refresh();
-            router.push(`/${params.storeId}/reviews`)
+            const page = getPage();
+            router.push(`/${params.storeId}/reviews?page=${page}`);
             toast.success(toastMessage);
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
@@ -82,7 +86,8 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ initialData }) => {
                 { withCredentials: true }
             );
             router.refresh();
-            router.push(`/${params.storeId}/reviews`);
+            const page = getPage();
+            router.push(`/${params.storeId}/reviews?page=${page}`);
             toast.success('Отзыв удален');
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {

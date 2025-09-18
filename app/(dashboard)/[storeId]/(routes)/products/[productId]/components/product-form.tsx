@@ -14,7 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Category, Image, Product, Size, ProductSize, Color, ProductColor, GiftCardPrice } from "@prisma/client";
 import axios from "axios";
 import { ChevronDown, Trash } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import toast from "react-hot-toast";
@@ -55,6 +55,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, categorie
     const [loading, setLoading] = useState(false);
     const params = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const currentPage = searchParams?.get("page") ?? "1";
 
     const title = initialData ? "Редактировать товар" : "Создать товар";
     const description = initialData ? "Управление товарами для вашего магазина" : "Создание нового товара";
@@ -88,7 +90,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, categorie
         name: "giftPrices",
     });
 
-    // inizializza giftPrices una sola volta
     useEffect(() => {
         if (initialData?.isGiftCard) {
             const values = initialData.giftPrices?.length
@@ -110,13 +111,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, categorie
             };
 
             if (initialData) {
-                await axios.patch(`/api/${params.storeId}/products/${params.productId}`, payload);
+                await axios.patch(`/api/${params.storeId}/products/${params.productId}`, payload, { withCredentials: true });
             } else {
-                await axios.post(`/api/${params.storeId}/products`, payload);
+                await axios.post(`/api/${params.storeId}/products`, payload, { withCredentials: true });
             }
 
             router.refresh();
-            router.push(`/${params.storeId}/products`);
+            router.push(`/${params.storeId}/products?page=${currentPage}`);
             toast.success(toastMessage);
         } catch {
             toast.error("Не удалось сохранить товар");
@@ -128,9 +129,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, categorie
     const onDelete = async () => {
         try {
             setLoading(true);
-            await axios.delete(`/api/${params.storeId}/products/${params.productId}`);
+            await axios.delete(`/api/${params.storeId}/products/${params.productId}`, { withCredentials: true });
             router.refresh();
-            router.push(`/${params.storeId}/products`);
+            router.push(`/${params.storeId}/products?page=${currentPage}`);
             toast.success("Товар удален");
         } catch {
             toast.error("Что-то пошло не так");
