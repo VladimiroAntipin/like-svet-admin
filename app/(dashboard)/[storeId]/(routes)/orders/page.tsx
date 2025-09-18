@@ -17,6 +17,7 @@ const OrdersPage = async ({ params }: any) => {
         include: {
           product: {
             include: {
+              images: true,
               productSizes: { include: { size: true } },
               productColors: { include: { color: true } },
             },
@@ -50,6 +51,7 @@ const OrdersPage = async ({ params }: any) => {
         name: oi.product.name,
         size: sizeName,
         color: colorName,
+        imageUrl: oi.product.images[0]?.url ?? "",
       };
     }),
     totalPrice: formatter(item.totalPrice),

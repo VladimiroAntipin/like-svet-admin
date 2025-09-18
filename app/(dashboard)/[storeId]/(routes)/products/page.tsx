@@ -15,6 +15,7 @@ const ProductsPage = async ({ params }: any) => {
     },
     include: {
       category: true,
+      images: true,
       productSizes: { include: { size: true } },
       productColors: { include: { color: true } },
       giftPrices: true,
@@ -33,6 +34,7 @@ const ProductsPage = async ({ params }: any) => {
     return {
       id: item.id,
       name: item.name,
+      imageUrl: item.images[0]?.url ?? "",
       isFeatured: item.isFeatured,
       isArchived: item.isArchived,
       price: priceList,

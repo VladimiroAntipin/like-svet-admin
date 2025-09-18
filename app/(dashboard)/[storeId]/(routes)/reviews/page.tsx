@@ -6,7 +6,7 @@ import { ReviewColumn } from "./components/columns";
 export const runtime = 'nodejs';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const BillboardsPage = async ({ params }: any) => {
+const ReviewsPage = async ({ params }: any) => {
     const resolvedParams = await params;
     const reviews = await prismadb.review.findMany({
         where: {
@@ -20,6 +20,7 @@ const BillboardsPage = async ({ params }: any) => {
     const formattedReviews: ReviewColumn[] = reviews.map((item) => ({
         id: item.id,
         label: item.label,
+        imageUrl: item.imageUrl ?? "",
         createdAt: format(item.createdAt, "dd/MM/yyyy")
     }))
 
@@ -32,4 +33,4 @@ const BillboardsPage = async ({ params }: any) => {
     );
 }
 
-export default BillboardsPage;
+export default ReviewsPage;

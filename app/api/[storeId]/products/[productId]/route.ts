@@ -44,7 +44,7 @@ export async function PATCH(req: Request, { params }: any) {
     if (!userId) return new NextResponse("Unauthorized", { status: 401 });
 
     const body = await req.json();
-    const { name, price, categoryId, sizeIds, colorIds, images, isFeatured, isArchived, isGiftCard, giftPrices } = body;
+    const { name, description, price, categoryId, sizeIds, colorIds, images, isFeatured, isArchived, isGiftCard, giftPrices } = body;
 
     if (!productId) return new NextResponse("Product ID is required", { status: 400 });
     if (!storeId) return new NextResponse("Store ID is required", { status: 400 });
@@ -64,6 +64,7 @@ export async function PATCH(req: Request, { params }: any) {
       where: { id: productId },
       data: {
         name,
+        description,
         price: isGiftCard ? null : price,
         categoryId,
         isFeatured: !!isFeatured,

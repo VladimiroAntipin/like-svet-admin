@@ -20,6 +20,7 @@ const CategoriesPage = async ({ params }: any) => {
     const formattedCategories: CategoryColumn[] = categories.map((item) => ({
         id: item.id,
         name: item.name,
+        imageUrl: item.imageUrl ?? "",
         createdAt: format(item.createdAt, "dd/MM/yyyy")
     }))
 

@@ -36,6 +36,7 @@ const priceSchema = z.number().min(0.01, "Минимальная цена 0.01")
 
 const formSchema = z.object({
     name: z.string().min(1),
+    description: z.string().optional(),
     images: z.object({ url: z.string() }).array().min(1, "Добавьте хотя бы 1 фото"),
     price: priceSchema,
     giftPrices: z.array(z.object({ value: z.number().min(0.01) })).optional(),
@@ -64,6 +65,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, categorie
         resolver: zodResolver(formSchema),
         defaultValues: {
             name: initialData?.name || "",
+            description: initialData?.description || "",
             images: initialData?.images?.map(img => ({ url: img.url })) || [],
             price: !initialData?.isGiftCard && initialData?.price != null ? initialData.price / 100 : undefined,
             giftPrices: [],
@@ -178,6 +180,22 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, categorie
                             <FormLabel>Название</FormLabel>
                             <FormControl>
                                 <Input disabled={loading} placeholder="Имя товара" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+
+                    {/* Description */}
+                    <FormField control={form.control} name="description" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Описание</FormLabel>
+                            <FormControl>
+                                <textarea
+                                    disabled={loading}
+                                    placeholder="Введите описание товара"
+                                    className="w-full border rounded-md p-2"
+                                    {...field}
+                                />
                             </FormControl>
                             <FormMessage />
                         </FormItem>

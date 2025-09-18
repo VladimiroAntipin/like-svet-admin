@@ -15,7 +15,7 @@ export async function POST(req: Request, { params }: any) {
     });
 
     const body = await req.json();
-    const { name, price, categoryId, sizeIds, colorIds, images, isFeatured, isArchived, isGiftCard, giftPrices } = body;
+    const { name, description ,price, categoryId, sizeIds, colorIds, images, isFeatured, isArchived, isGiftCard, giftPrices } = body;
 
     if (!userId) return new NextResponse("Not authenticated", { status: 401 });
     if (!name) return new NextResponse("Name is required", { status: 400 });
@@ -40,6 +40,7 @@ export async function POST(req: Request, { params }: any) {
     const product = await prismadb.product.create({
       data: {
         name,
+        description,
         price: isGiftCard ? null : price,
         isGiftCard: !!isGiftCard,
         isFeatured: !!isFeatured,

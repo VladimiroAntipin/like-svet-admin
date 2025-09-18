@@ -1,9 +1,11 @@
 import { ColumnDef } from "@tanstack/react-table";
+import Image from "next/image";
 
 export type ProductInfo = {
   name: string;
   size?: string;
   color?: string;
+  imageUrl?: string;
 };
 
 export type OrderColumn = {
@@ -67,38 +69,49 @@ export const columns: ColumnDef<OrderColumn>[] = [
     accessorKey: "products",
     header: "Товары",
     cell: ({ row }) => (
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-1">
         {row.original.products.map((p, idx) => (
-          <span key={idx}>
-            {p.name}
-            {p.size ? `, ${p.size}` : ""}
-            {p.color ? `, ${p.color}` : ""}
-          </span>
+          <div key={idx} className="flex items-center gap-2">
+            {p.imageUrl && (
+              <Image
+                src={p.imageUrl}
+                alt={p.name}
+                width={24}
+                height={24}
+                className="w-15 h-15 rounded-full object-cover"
+              />
+            )}
+            <span>
+              {p.name}
+              {p.size ? `, ${p.size}` : ""}
+              {p.color ? `, ${p.color}` : ""}
+            </span>
+          </div>
         ))}
       </div>
     ),
   },
 
   { accessorKey: "totalPrice", header: "Итого" },
-  { accessorKey: "isPaid", header: "Оплачено", cell: ({ row }) => (row.original.isPaid ? "✅" : "❌")},
+  { accessorKey: "isPaid", header: "Оплачено", cell: ({ row }) => (row.original.isPaid ? "✅" : "❌") },
   {
-  accessorKey: "createdAt",
-  header: "Дата",
-  cell: ({ row }) => {
-    const date = new Date(row.original.createdAt);
+    accessorKey: "createdAt",
+    header: "Дата",
+    cell: ({ row }) => {
+      const date = new Date(row.original.createdAt);
 
-    return (
-      <span>
-        {date.toLocaleString("ru-RU", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          timeZone: "Europe/Moscow",
-        })}
-      </span>
-    );
-  },
-}
+      return (
+        <span>
+          {date.toLocaleString("ru-RU", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            timeZone: "Europe/Moscow",
+          })}
+        </span>
+      );
+    },
+  }
 ];

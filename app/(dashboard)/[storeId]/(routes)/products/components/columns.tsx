@@ -2,10 +2,13 @@
 
 import { ColumnDef } from "@tanstack/react-table"
 import { CellAction } from "./cell-action"
+import Image from "next/image"
 
 export type ProductColumn = {
   id: string
   name: string
+  description?: string
+  imageUrl?: string
   price: string[]
   size: string[]
   color: string[]
@@ -16,6 +19,23 @@ export type ProductColumn = {
 }
 
 export const columns: ColumnDef<ProductColumn>[] = [
+  {
+    accessorKey: "imageUrl",
+    header: "",
+    cell: ({ row }) => (
+      row.original.imageUrl ? (
+        <Image
+          width={50}
+          height={50}
+          src={row.original.imageUrl}
+          alt={row.original.name}
+          className="w-15 h-15 rounded-full object-cover"
+        />
+      ) : (
+        <div className="w-8 h-8 rounded-full bg-gray-200" />
+      )
+    ),
+  },
   {
     accessorKey: "name",
     header: "Название",
