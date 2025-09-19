@@ -31,7 +31,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => { mountedRef.current = false; };
   }, []);
 
-  // --- Memoizzato ---
   const checkAuth = useCallback(async (): Promise<void> => {
     setIsLoading(true);
     try {
@@ -39,7 +38,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!mountedRef.current) return;
 
-      // Aggiorna stato solo se cambia realmente
       setUserId(prev => prev !== newUserId ? newUserId : prev);
       setEmail(prev => prev !== newEmail ? newEmail : prev);
       setIsAuthenticated(prev => prev !== !!newUserId ? !!newUserId : prev);
@@ -53,7 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // --- Memoizzato ---
+  // --- SignOut ---
   const signOut = useCallback(async () => {
     try {
       await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' });
@@ -67,7 +65,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [router]);
 
-  // --- Memoizzato ---
   const refreshSession = useCallback(async () => {
     try {
       await fetch('/api/admin/refresh', { method: 'POST', credentials: 'include' });
@@ -123,13 +120,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [checkAuth]);
 
-  // --- Timer per refresh automatico ---
   useEffect(() => {
     const interval = setInterval(() => {
       if (isAuthenticated && !isLoading) {
         refreshSession();
       }
-    }, 2 * 60 * 1000);
+    }, 10 * 60 * 1000);
     return () => clearInterval(interval);
   }, [isAuthenticated, isLoading, refreshSession]);
 
