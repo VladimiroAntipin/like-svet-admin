@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import prismadb from "@/lib/prismadb";
-import { notifyNewOrder } from "./stream/route"; //new
+import { notifyNewOrder } from "./stream/clients"; //new
 
 export const runtime = 'nodejs';
 
