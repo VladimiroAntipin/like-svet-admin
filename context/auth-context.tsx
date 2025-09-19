@@ -38,16 +38,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const p = (async () => {
       setIsLoading(true);
       try {
-        const { userId, email } = await auth();
+        const { userId: newUserId, email: newEmail } = await auth();
 
         if (!mountedRef.current) return null;
 
-        setUserId(userId);
-        setEmail(email ?? null);
-        setIsAuthenticated(!!userId);
+        setUserId((prev) => prev !== newUserId ? newUserId : prev);
+        setEmail((prev) => prev !== newEmail ? newEmail : prev);
+        setIsAuthenticated((prev) => prev !== !!newUserId ? !!newUserId : prev);
 
-        return { userId, email: email ?? null };
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        return { userId: newUserId, email: newEmail ?? null };
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
         if (!mountedRef.current) return null;
 
@@ -106,12 +106,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await checkAuth();
         try { bcRef.current?.postMessage('signIn'); } catch { }
         localStorage.setItem('passwordAuthorized', 'true');
-        window.location.assign(redirectTo);
+
+        router.push(redirectTo);
         return { success: true };
       }
 
       return { success: false, error: data?.error || 'Errore login' };
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       return { success: false, error: 'Connection error' };
     }
@@ -149,11 +150,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         await signOut();
       }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       await signOut();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checkAuth]);
 
   useEffect(() => {
