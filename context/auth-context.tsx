@@ -24,46 +24,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const router = useRouter();
   const bcRef = useRef<BroadcastChannel | null>(null);
-  const pendingCheckRef = useRef<Promise<{ userId: string | null; email: string | null } | null> | null>(null);
   const mountedRef = useRef(true);
+
+  // Flag per aggiornamento silenzioso
+  const silentRefreshRef = useRef(false);
 
   useEffect(() => {
     mountedRef.current = true;
     return () => { mountedRef.current = false; };
   }, []);
 
-  const checkAuth = useCallback(async (): Promise<{ userId: string | null; email: string | null } | null> => {
-    if (pendingCheckRef.current) return pendingCheckRef.current;
+  const checkAuth = useCallback(async (silent = false): Promise<void> => {
+    if (silent) silentRefreshRef.current = true;
+    setIsLoading(true);
+    try {
+      const { userId: newUserId, email: newEmail } = await auth();
 
-    const p = (async () => {
-      setIsLoading(true);
-      try {
-        const { userId: newUserId, email: newEmail } = await auth();
+      if (!mountedRef.current) return;
 
-        if (!mountedRef.current) return null;
+      // Aggiorna solo se cambia realmente
+      setUserId(prev => prev !== newUserId ? newUserId : prev);
+      setEmail(prev => prev !== newEmail ? newEmail : prev);
+      setIsAuthenticated(prev => prev !== !!newUserId ? !!newUserId : prev);
 
-        setUserId((prev) => prev !== newUserId ? newUserId : prev);
-        setEmail((prev) => prev !== newEmail ? newEmail : prev);
-        setIsAuthenticated((prev) => prev !== !!newUserId ? !!newUserId : prev);
+    } catch {
+      if (!mountedRef.current) return;
 
-        return { userId: newUserId, email: newEmail ?? null };
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (err) {
-        if (!mountedRef.current) return null;
+      setUserId(null);
+      setEmail(null);
+      setIsAuthenticated(false);
 
-        setUserId(null);
-        setEmail(null);
-        setIsAuthenticated(false);
-
-        return null;
-      } finally {
-        if (mountedRef.current) setIsLoading(false);
-        pendingCheckRef.current = null;
-      }
-    })();
-
-    pendingCheckRef.current = p;
-    return p;
+    } finally {
+      if (mountedRef.current) setIsLoading(false);
+      silentRefreshRef.current = false;
+    }
   }, []);
 
   useEffect(() => {
@@ -72,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         bcRef.current = new BroadcastChannel('auth');
         bcRef.current.onmessage = (ev) => {
           if (ev.data === 'signIn' || ev.data === 'refresh') {
-            if (!pendingCheckRef.current) checkAuth();
+            checkAuth(true); // silent refresh
           } else if (ev.data === 'signOut') {
             setUserId(null);
             setEmail(null);
@@ -86,6 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
+    // Controllo auth iniziale
     checkAuth();
 
     return () => { try { bcRef.current?.close(); } catch { } };
@@ -104,15 +99,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (data?.success) {
         await checkAuth();
-        try { bcRef.current?.postMessage('signIn'); } catch { }
+        try { bcRef.current?.postMessage('signIn'); } catch {}
         localStorage.setItem('passwordAuthorized', 'true');
-
-        router.push(redirectTo);
+        router.push(redirectTo); // client routing, niente full reload
         return { success: true };
       }
 
       return { success: false, error: data?.error || 'Errore login' };
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       return { success: false, error: 'Connection error' };
     }
@@ -120,49 +113,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      await fetch('/api/admin/logout', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-      });
+      await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' });
     } finally {
       setUserId(null);
       setEmail(null);
       setIsAuthenticated(false);
       localStorage.setItem('passwordAuthorized', 'false');
-      try { bcRef.current?.postMessage('signOut'); } catch { }
+      try { bcRef.current?.postMessage('signOut'); } catch {}
       if (window.location.pathname !== '/sign-in') router.push('/sign-in');
     }
   };
 
   const refreshSession = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/refresh', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const res = await fetch('/api/admin/refresh', { method: 'POST', credentials: 'include' });
       const data = await res.json().catch(() => null);
 
       if (data?.success) {
-        await checkAuth();
-        try { bcRef.current?.postMessage('refresh'); } catch { }
+        // Silent checkAuth per evitare re-render e reload pagina
+        await checkAuth(true);
+        try { bcRef.current?.postMessage('refresh'); } catch {}
       } else {
         await signOut();
       }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       await signOut();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checkAuth]);
 
+  // Refresh automatico ogni 10 minuti in background
   useEffect(() => {
     const interval = setInterval(() => {
       if (isAuthenticated && !isLoading) {
         refreshSession();
       }
-    }, 10 * 60 * 1000);
+    }, 2 * 60 * 1000);
+
     return () => clearInterval(interval);
   }, [isAuthenticated, isLoading, refreshSession]);
 
