@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import prismadb from "@/lib/prismadb";
-import { notifyNewOrder } from "./stream/clients"; //new
 
 export const runtime = 'nodejs';
 
@@ -62,8 +61,6 @@ export async function POST(req: Request, { params }: any) {
                 orderItems: true,
             },
         });
-
-        notifyNewOrder(order); //new
 
         return NextResponse.json(order, { status: 201 });
     } catch (error) {

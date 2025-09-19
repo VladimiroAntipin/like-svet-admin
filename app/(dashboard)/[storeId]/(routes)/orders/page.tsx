@@ -7,9 +7,8 @@ export const runtime = 'nodejs';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const OrdersPage = async ({ params }: any) => {
-  const { storeId } = params;
+  const { storeId } = await params;
 
-  // Prendi tutti gli ordini del negozio
   const orders = await prismadb.order.findMany({
     where: { storeId },
     include: {
@@ -29,18 +28,17 @@ const OrdersPage = async ({ params }: any) => {
     orderBy: { createdAt: "desc" },
   });
 
-  // Formatta gli ordini nello stesso schema che lo stream invierà
-  const formattedOrders: OrderColumn[] = orders.map((order) => ({
-    id: order.id,
-    client: `${order.customer?.firstName || ""} ${order.customer?.lastName || ""}`,
-    contacts: `${order.customer?.phone || ""} ${order.customer?.email || ""}`,
-    region: order.region,
-    address: order.address,
-    apartment: order.apartment || undefined,
-    floor: order.floor || undefined,
-    entrance: order.entrance || undefined,
-    extraInfo: order.extraInfo || undefined,
-    products: order.orderItems.map((oi) => {
+  const formattedOrders: OrderColumn[] = orders.map((item) => ({
+    id: item.id,
+    client: `${item.customer?.firstName || ""} ${item.customer?.lastName || ""}`,
+    contacts: `${item.customer?.phone || ""} ${item.customer?.email || ""}`,
+    region: item.region,
+    address: item.address,
+    apartment: item.apartment || undefined,
+    floor: item.floor || undefined,
+    entrance: item.entrance || undefined,
+    extraInfo: item.extraInfo || undefined,
+    products: item.orderItems.map((oi) => {
       const sizeName = oi.sizeId
         ? oi.product.productSizes.find((ps) => ps.sizeId === oi.sizeId)?.size.name
         : undefined;
@@ -56,10 +54,10 @@ const OrdersPage = async ({ params }: any) => {
         imageUrl: oi.product.images[0]?.url ?? "",
       };
     }),
-    totalPrice: formatter(order.totalPrice),
-    shippingMethod: order.shippingMethod,
-    isPaid: order.isPaid,
-    createdAt: order.createdAt.toISOString(),
+    totalPrice: formatter(item.totalPrice),
+    shippingMethod: item.shippingMethod,
+    isPaid: item.isPaid,
+    createdAt: item.createdAt.toISOString()
   }));
 
   return (
