@@ -66,7 +66,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({ initialData }) => {
             router.refresh();
             router.push(`/${params.storeId}/categories?page=${currentPage}`);
             toast.success(toastMessage);
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
             toast.error('Не удалось обновить категорию');
         } finally {
@@ -84,7 +84,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({ initialData }) => {
             router.refresh();
             router.push(`/${params.storeId}/categories?page=${currentPage}`);
             toast.success('Категория удалена');
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
             toast.error('Необхлдимо удалить все товары из этой категории');
         } finally {
@@ -112,10 +112,11 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({ initialData }) => {
                             <FormLabel>Фото</FormLabel>
                             <FormControl>
                                 <ImageUpload
-                                    value={field.value ? [field.value] : []}
+                                    value={field.value ? [{ id: 'single', url: field.value }] : []}
                                     disabled={loading}
                                     onChange={(url) => field.onChange(url)}
                                     onRemove={() => field.onChange('')}
+                                    move={() => { }}
                                 />
                             </FormControl>
                             <FormMessage />

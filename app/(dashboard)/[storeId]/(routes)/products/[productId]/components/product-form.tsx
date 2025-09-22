@@ -80,7 +80,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, categorie
         },
     });
 
-    const { fields: imageFields, append: appendImage, remove: removeImage } = useFieldArray({
+    const { fields: imageFields, append: appendImage, remove: removeImage, move } = useFieldArray({
         control: form.control,
         name: "images",
     });
@@ -162,13 +162,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({ initialData, categorie
                             <FormLabel>Фото</FormLabel>
                             <FormControl>
                                 <ImageUpload
-                                    value={imageFields.map(img => img.url)}
+                                    value={imageFields}
                                     disabled={loading}
-                                    onChange={url => appendImage({ url })}
-                                    onRemove={url => {
+                                    onChange={(url) => appendImage({ url })}
+                                    onRemove={(url) => {
                                         const index = imageFields.findIndex(f => f.url === url);
                                         if (index >= 0) removeImage(index);
                                     }}
+                                    move={move}
                                 />
                             </FormControl>
                             <FormMessage />

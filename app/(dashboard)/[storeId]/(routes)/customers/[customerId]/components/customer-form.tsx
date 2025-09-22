@@ -67,27 +67,27 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData }) => {
     resolver: zodResolver(formSchema),
     defaultValues: initialData
       ? {
-          firstName: initialData.firstName || "",
-          lastName: initialData.lastName || "",
-          profileImage: initialData.profileImage || "",
-          birthDate: initialData.birthDate
-            ? new Date(initialData.birthDate).toISOString().split("T")[0]
-            : "",
-          email: initialData.email || "",
-          phone: initialData.phone || "",
-          password: "",
-          balance: initialData.balance ? initialData.balance / 100 : 0,
-        }
+        firstName: initialData.firstName || "",
+        lastName: initialData.lastName || "",
+        profileImage: initialData.profileImage || "",
+        birthDate: initialData.birthDate
+          ? new Date(initialData.birthDate).toISOString().split("T")[0]
+          : "",
+        email: initialData.email || "",
+        phone: initialData.phone || "",
+        password: "",
+        balance: initialData.balance ? initialData.balance / 100 : 0,
+      }
       : {
-          firstName: "",
-          lastName: "",
-          profileImage: "",
-          birthDate: "",
-          email: "",
-          phone: "",
-          password: "",
-          balance: 0,
-        },
+        firstName: "",
+        lastName: "",
+        profileImage: "",
+        birthDate: "",
+        email: "",
+        phone: "",
+        password: "",
+        balance: 0,
+      },
   });
 
   const onSubmit = async (data: CustomerFormValues) => {
@@ -176,10 +176,11 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData }) => {
                 <FormLabel>Аватар</FormLabel>
                 <FormControl>
                   <ImageUpload
-                    value={field.value ? [field.value] : []}
+                    value={field.value ? [{ id: 'single', url: field.value }] : []}
                     disabled={loading}
                     onChange={(url) => field.onChange(url)}
-                    onRemove={() => field.onChange("")}
+                    onRemove={() => field.onChange('')}
+                    move={() => { }}
                   />
                 </FormControl>
                 <FormMessage />
