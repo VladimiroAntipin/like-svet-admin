@@ -51,6 +51,7 @@ async function downloadAndSaveImage(recordId: string, imgUrl: string) {
   );
   const webpBuffer = await sharp(buffer)
     .resize({ width: 1200 })
+    .withMetadata({ orientation: undefined })
     .webp({ quality: 100 })
     .toBuffer();
 
