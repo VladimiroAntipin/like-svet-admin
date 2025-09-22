@@ -34,7 +34,7 @@ export default async function DashboardLayout({ children, params }: { children: 
 
     return (
         <>
-            <Navbar />
+            <Navbar storeId={params.storeId}/>
             <main className="
                 pt-[calc(64px+env(safe-area-inset-top))]
                 max-[1435px]:pt-[calc(88px+env(safe-area-inset-top))]

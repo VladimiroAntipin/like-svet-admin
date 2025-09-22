@@ -6,10 +6,11 @@ import { MainNav } from "@/components/main-nav";
 import StoreSwitcher from "@/components/store-switcher";
 import { UserMenu } from "./ui/user-menu";
 import { verifyToken } from "@/lib/server/auth/tokens";
+import DownloadImagesButton from "./download-images-button";
 
 export const runtime = 'nodejs';
 
-const Navbar = async () => {
+const Navbar = async ({ storeId }: { storeId: string }) => {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("admin_access_token")?.value;
 
@@ -34,6 +35,7 @@ const Navbar = async () => {
         <StoreSwitcher items={stores} />
         <MainNav className="mx-6 max-[1435px]:mx-0 max-[1080px]:w-full max-[500px]:w-full" />
         <div className="ml-auto flex items-center space-x-4 max-[1435px]:absolute max-[1435px]:top-1 max-[1435px]:right-4">
+          <DownloadImagesButton storeId={storeId} />
           <ThemeToggle />
           <UserMenu />
         </div>

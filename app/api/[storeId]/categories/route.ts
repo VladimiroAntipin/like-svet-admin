@@ -71,7 +71,14 @@ export async function GET(req: Request, { params }: any) {
             where: { storeId: resolvedParams.storeId },
         });
 
-        return NextResponse.json(categories);
+        const CMS_URL = process.env.NEXT_PUBLIC_ADMIN_URL || "http://localhost:3000";
+
+        const formatted = categories.map((c) => ({
+            ...c,
+            imageUrl: `${CMS_URL}${c.localUrl}`
+        }));
+
+        return NextResponse.json(formatted);
     } catch (error) {
         console.error("[CATEGORIES_GET]", error);
         return new NextResponse("Internal Server Error", { status: 500 });

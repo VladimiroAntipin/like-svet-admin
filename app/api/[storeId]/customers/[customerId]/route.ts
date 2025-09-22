@@ -19,7 +19,18 @@ export async function GET(req: Request, { params }: any) {
       where: { id: customerId },
     });
 
-    return NextResponse.json(customer);
+    if (!customer) {
+      return new NextResponse("Customer not found", { status: 404 });
+    }
+
+    const CMS_BASE_URL = process.env.NEXT_PUBLIC_ADMIN_URL || "http://localhost:3000";
+
+    const formattedCustomer = {
+      ...customer,
+      profileImage: customer.localProfileImage ? `${CMS_BASE_URL}${customer.localProfileImage}` : customer.profileImage,
+    };
+
+    return NextResponse.json(formattedCustomer);
   } catch (error) {
     console.error("[CUSTOMER_GET]", error);
     return new NextResponse("Failed to get customer", { status: 500 });

@@ -49,6 +49,7 @@ model Billboard {
   store           Store           @relation("StoreToBillboard", fields: [storeId], references: [id])
   label           String
   imageUrl        String
+  localUrl        String?
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
@@ -61,6 +62,7 @@ model Review {
   store           Store           @relation("StoreToReview", fields: [storeId], references: [id])
   label           String
   imageUrl        String
+  localUrl        String?
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
@@ -74,6 +76,7 @@ model Category {
   products        Product[]       @relation("CategoryToProduct")
   name            String
   imageUrl        String
+  localUrl        String?
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
@@ -147,6 +150,7 @@ model Image {
   productId       String          @db.ObjectId
   product         Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
   url             String
+  localUrl        String?
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
@@ -221,23 +225,24 @@ model ProductColor {
 //
 
 model Customer {
-  id            String              @id @default(auto()) @map("_id") @db.ObjectId
-  storeId       String              @db.ObjectId
-  firstName     String
-  lastName      String
-  birthDate     DateTime
-  profileImage  String?
-  email         String              @unique
-  phone         String?             @unique
-  password      String
-  balance       Int                 @default(0)  
-  favorites     Favorite[]
-  orders        Order[]     
-  giftCodes     GiftCodeRedemption[]
-  purchases     GiftCodePurchase[] 
-  refreshToken  String?
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
+  id                     String              @id @default(auto()) @map("_id") @db.ObjectId
+  storeId                String              @db.ObjectId
+  firstName              String
+  lastName               String
+  birthDate              DateTime
+  profileImage           String?
+  localProfileImage      String?
+  email                  String              @unique
+  phone                  String?             @unique
+  password               String
+  balance                Int                 @default(0)  
+  favorites              Favorite[]
+  orders                 Order[]     
+  giftCodes              GiftCodeRedemption[]
+  purchases              GiftCodePurchase[] 
+  refreshToken           String?
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
 }
 
 model Favorite {

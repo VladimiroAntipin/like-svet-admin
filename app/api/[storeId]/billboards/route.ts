@@ -71,7 +71,15 @@ export async function GET(req: Request, { params }: any) {
             where: { storeId: resolvedParams.storeId },
         });
 
-        return NextResponse.json(billboards);
+        const CMS_URL = process.env.NEXT_PUBLIC_ADMIN_URL || "http://localhost:3000";
+
+        const formatted = billboards.map((b) => ({
+            id: b.id,
+            label: b.label,
+            imageUrl: `${CMS_URL}${b.localUrl}`
+        }));
+
+        return NextResponse.json(formatted);
     } catch (error) {
         console.error('[BILLBOARDS_GET]', error);
         return new NextResponse('Internal Server Error', { status: 500 });

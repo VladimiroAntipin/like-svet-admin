@@ -73,7 +73,15 @@ export async function GET(req: Request, { params }: any) {
       },
     });
 
-    return NextResponse.json(reviews);
+    const CMS_BASE_URL = process.env.NEXT_PUBLIC_ADMIN_URL || "http://localhost:3000";
+
+    const formatted = reviews.map((r) => ({
+      id: r.id,
+      label: r.label,
+      imageUrl: `${CMS_BASE_URL}${r.localUrl}`
+    }));
+
+    return NextResponse.json(formatted);
   } catch (error) {
     console.error("[REVIEWS_GET]", error);
     return new NextResponse("Internal Server Error", { status: 500 });
