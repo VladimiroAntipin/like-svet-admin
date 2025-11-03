@@ -57,6 +57,7 @@ const OrdersPage = async ({ params }: any) => {
     totalPrice: formatter(item.totalPrice),
     shippingMethod: item.shippingMethod,
     isPaid: item.isPaid,
+    trackNumber: item.trackNumber || "",
     createdAt: item.createdAt.toISOString()
   }));
 

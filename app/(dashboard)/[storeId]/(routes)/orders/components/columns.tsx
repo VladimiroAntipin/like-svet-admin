@@ -1,5 +1,6 @@
 import { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
+import { CellAction } from "./cell-action";
 
 export type ProductInfo = {
   name: string;
@@ -23,6 +24,7 @@ export type OrderColumn = {
   shippingMethod: string;
   createdAt: string;
   isPaid: boolean;
+  trackNumber?: string;
 };
 
 export const columns: ColumnDef<OrderColumn>[] = [
@@ -44,6 +46,7 @@ export const columns: ColumnDef<OrderColumn>[] = [
   },
 
   { accessorKey: "shippingMethod", header: "Способ доставки" },
+  { accessorKey: "trackNumber", header: "Трек-номер" },
 
   {
     header: "Адрес",
@@ -78,10 +81,10 @@ export const columns: ColumnDef<OrderColumn>[] = [
                 alt={p.name}
                 width={24}
                 height={24}
-                className="w-15 h-15 rounded-full object-cover"
+                className="w-15 h-15 rounded-full object-cover flex-shrink-0"
               />
             )}
-            <span>
+            <span className="text-sm break-words min-w-0">
               {p.name}
               {p.size ? `, ${p.size}` : ""}
               {p.color ? `, ${p.color}` : ""}
@@ -113,5 +116,10 @@ export const columns: ColumnDef<OrderColumn>[] = [
         </span>
       );
     },
-  }
+  },
+  {
+      accessorKey: "actions",
+      header: "",
+      cell: ({ row }) => <CellAction data={row.original} />
+    }
 ];

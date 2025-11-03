@@ -29,29 +29,35 @@ export async function GET(req: Request, { params }: any) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function PATCH(req: Request, { params }: any) {
-    try {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { storeId, orderId } = await params;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { storeId, orderId } = await params;
+    const body = await req.json();
 
-        const body = await req.json();
-        const { isPaid } = body;
-        if (typeof isPaid !== "boolean") {
-            return new NextResponse("Missing isPaid boolean", { status: 400 });
-        }
-
-        // Aggiorna sempre isPaid senza autorizzazione
-        const order = await prismadb.order.update({
-            where: {
-                id: orderId,
-            },
-            data: { isPaid },
-        });
-
-        return NextResponse.json(order);
-    } catch (err) {
-        console.error("[ORDER_PATCH]", err);
-        return new NextResponse("Internal Server Error", { status: 500 });
+    // Se il body contiene trackNumber, aggiorna solo quello
+    if (body.trackNumber !== undefined) {
+      const updatedOrder = await prismadb.order.update({
+        where: { id: orderId },
+        data: { trackNumber: body.trackNumber },
+      });
+      return NextResponse.json(updatedOrder);
     }
+
+    // Altrimenti controlla se c'è isPaid
+    if (typeof body.isPaid === "boolean") {
+      const updatedOrder = await prismadb.order.update({
+        where: { id: orderId },
+        data: { isPaid: body.isPaid },
+      });
+      return NextResponse.json(updatedOrder);
+    }
+
+    return new NextResponse("Missing isPaid or trackNumber", { status: 400 });
+
+  } catch (err) {
+    console.error("[ORDER_PATCH]", err);
+    return new NextResponse("Internal Server Error", { status: 500 });
+  }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

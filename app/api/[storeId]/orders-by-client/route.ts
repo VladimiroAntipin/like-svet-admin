@@ -65,6 +65,7 @@ export async function GET(req: Request, { params }: any) {
       extraInfo: order.extraInfo,
       shippingMethod: order.shippingMethod,
       totalAmount: order.totalPrice,
+      trackNumber: order.trackNumber || "",
       products: order.orderItems.map((item) => ({
         id: item.product.id,
         name: item.product.name,
