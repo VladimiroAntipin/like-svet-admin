@@ -30,7 +30,7 @@ const modelMap = {
   },
   Product: {
     findMany: (filter: any) => prismadb.product.findMany({ ...filter, include: { images: true } }),
-    update: () => {},
+    update: () => { },
     field: "images",
     isArray: true,
   },
@@ -109,7 +109,16 @@ export async function POST(req: Request, { params }: any) {
 
           let localUrl = record.localUrl;
           try {
-            if (!localUrl || !fileExists(localUrl)) {
+            // Estrae il nome del file originale da Cloudinary
+            const originalName = path.basename(imgUrl).split(".")[0];
+            const alreadySaved = localUrl && fileExists(localUrl);
+
+            // Controlla se il file salvato appartiene alla stessa immagine Cloudinary
+            const isSameImage =
+              alreadySaved && localUrl.includes(originalName);
+
+            if (!alreadySaved || !isSameImage) {
+              // Se l'immagine è cambiata o il file non esiste → riscarica
               localUrl = await downloadAndSaveImage(record.id, imgUrl);
               await client.update({ id: record.id }, { localUrl });
               totalDownloaded++;
@@ -139,9 +148,9 @@ export async function POST(req: Request, { params }: any) {
       }
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      result, 
+    return NextResponse.json({
+      success: true,
+      result,
       countDownloaded: totalDownloaded,
       countDeleted: deletedCount
     });

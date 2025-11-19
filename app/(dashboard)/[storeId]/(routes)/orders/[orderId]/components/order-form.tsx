@@ -129,7 +129,7 @@ export const OrderForm: React.FC<TrackNumberFormProps> = ({ initialData }) => {
               <FormLabel>Итого</FormLabel>
               <FormControl>
                 <Input
-                  value={initialData.totalPrice}
+                  value={(initialData.totalPrice / 100).toFixed(2) + ' ₽'}
                   readOnly
                   className="border rounded px-2 py-1 w-full bg-gray-100"
                 />

@@ -19,22 +19,31 @@ function generateGiftCode(length = 8) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function POST(req: Request, { params }: any) {
   try {
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
-    const token = authHeader.split(" ")[1];
-    const { payload } = await jwtVerify(token, JWT_SECRET);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const userId = (payload as any).id as string;
-    if (!userId) return new NextResponse("Invalid token", { status: 401 });
-
     const body = await req.json();
-    const { amount, expiresAt, orderItemId } = body;
+    const { amount, expiresAt, orderItemId, customerId: bodyCustomerId } = body;
 
     if (!amount || !orderItemId) {
       return new NextResponse("amount and orderItemId are required", { status: 400 });
+    }
+
+    // =========================
+    // AUTENTICAZIONE
+    // =========================
+    let customerId: string | undefined = bodyCustomerId;
+
+    if (!customerId) {
+      // se non passato dal server, richiede JWT
+      const authHeader = req.headers.get("authorization");
+      if (!authHeader?.startsWith("Bearer ")) {
+        return new NextResponse("Unauthorized", { status: 401 });
+      }
+
+      const token = authHeader.split(" ")[1];
+      const { payload } = await jwtVerify(token, JWT_SECRET);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      customerId = (payload as any).id as string;
+
+      if (!customerId) return new NextResponse("Invalid token", { status: 401 });
     }
 
     // controlla se esiste già un gift code per questo item
@@ -76,7 +85,7 @@ export async function POST(req: Request, { params }: any) {
     const purchase = await prismadb.giftCodePurchase.create({
       data: {
         giftCodeId: giftCode.id,
-        customerId: userId,
+        customerId,
         orderItemId,
       },
       include: {
